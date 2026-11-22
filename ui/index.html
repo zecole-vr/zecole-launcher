@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZECOLE 한글패치 런처</title>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#0e0e11; --bg-2:#131317; --surface:#18181d; --surface-2:#1f1f25; --surface-3:#26262d;
+  --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.12);
+  --text:#eeebe4; --text-2:#bdb9b0; --muted:#8a867d; --faint:#5f5c56;
+  --accent:#e6a96e; --accent-hi:#f3c896; --accent-ink:#2a1b0d; --accent-soft:rgba(230,169,110,.12);
+  --blue:#6fa8ff; --blue-soft:rgba(111,168,255,.12);
+  --ok:#6cc08a; --ok-soft:rgba(108,192,138,.12); --err:#e8667a; --yt:#ff4e45;
+  --r-sm:8px; --r:12px; --r-lg:16px;
+  --shadow:0 20px 60px rgba(0,0,0,.45); --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Pretendard",-apple-system,"Malgun Gothic",sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden;font-feature-settings:"tnum" 1;user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+button:disabled{cursor:default}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:#2b2b32;border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 브라우저 미리보기에서만 창처럼 띄움. 런처 안에서는 창 전체를 채움 */
+body.preview{display:grid;place-items:center;background:#08080a radial-gradient(ellipse at 30% 20%,#1a1712 0,transparent 60%)}
+.app{width:100vw;height:100vh;display:grid;grid-template-rows:40px 1fr;background:var(--bg);overflow:hidden}
+body.preview .app{width:min(1120px,100vw);height:min(720px,100vh);border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,.09),0 30px 90px rgba(0,0,0,.6)}
+
+/* ── 제목 줄 ── */
+.titlebar{display:flex;align-items:center;gap:10px;padding-left:16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;pointer-events:none}
+.mark{width:22px;height:22px;border-radius:6px;background:url(icon.png) center/cover}
+.brand b{font-weight:800;letter-spacing:.14em;font-size:12px}
+.brand span{color:var(--muted);font-size:12px}
+.tb-sp{flex:1;align-self:stretch}
+.tb-meta{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px;white-space:nowrap}
+.tb-pill{display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(230,169,110,.3)}
+.tb-pill:hover{background:rgba(230,169,110,.2)}
+.winbtns{display:flex;height:100%;margin-left:6px}
+.winbtns button{width:46px;height:100%;display:grid;place-items:center;color:var(--text-2)}
+.winbtns button:hover{background:var(--surface-2)} .winbtns button.x:hover{background:#c42b1c;color:#fff}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block;flex:none}
+.dot.warn{background:var(--accent)} .dot.off{background:var(--faint)} .dot.err{background:var(--err)} .dot.blue{background:var(--blue)}
+.pulse{animation:pulse 1s ease-in-out infinite alternate}@keyframes pulse{from{opacity:.35}to{opacity:1}}
+
+.body{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:0}
+
+/* ── 사이드바 ── */
+.side{background:var(--bg-2);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.side-scroll{flex:1;overflow:auto;padding:12px 10px}
+.nav{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:var(--r-sm);color:var(--text-2);width:100%;text-align:left;font-weight:600}
+.nav:hover{background:var(--surface);color:var(--text)} .nav.on{background:var(--surface-2);color:var(--text)}
+.nav .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:9px;padding:0 6px;line-height:18px}
+.sec{display:flex;align-items:center;justify-content:space-between;margin:16px 10px 6px;font-size:11px;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.sec em{font-style:normal;color:var(--faint)}
+.gitem{position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:6px 10px;border-radius:var(--r-sm);text-align:left}
+.gitem:hover{background:var(--surface)} .gitem.on{background:var(--surface-2)}
+.gitem.on::before{content:"";position:absolute;left:-10px;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
+.thumb{position:relative;overflow:hidden;width:38px;height:38px;border-radius:8px;flex:none;background-color:var(--surface-3);background-position:center;background-size:cover;box-shadow:inset 0 0 0 1px var(--line)}
+.gmeta{min-width:0;flex:1}
+.gname{font-weight:650;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gsub{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden}
+.gsub .warn-t{color:var(--accent)}
+.badge{font-size:9.5px;font-weight:800;color:var(--accent-ink);background:var(--accent);padding:0 4px;border-radius:3px;letter-spacing:.04em;line-height:15px}
+.badge.blue{background:var(--blue);color:#0b1830}
+.req{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;padding:9px 10px;border-radius:var(--r-sm);border:1px dashed var(--line-2);color:var(--muted);font-size:12.5px}
+.req:hover{color:var(--text);border-color:var(--accent)}
+.skel{height:50px;margin:2px 0;border-radius:8px;background:linear-gradient(90deg,var(--surface) 0,var(--surface-2) 50%,var(--surface) 100%);background-size:200% 100%;animation:sk 1.2s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+
+.side-foot{border-top:1px solid var(--line);padding:12px}
+.side-promo{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:10px;margin-bottom:10px;background:linear-gradient(135deg,rgba(111,168,255,.16),rgba(111,168,255,.04));box-shadow:inset 0 0 0 1px rgba(111,168,255,.25)}
+.side-promo:hover{box-shadow:inset 0 0 0 1px rgba(111,168,255,.5)}
+.side-promo small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--blue)}
+.side-promo b{display:block;font-size:12.5px;line-height:1.4;margin-top:2px}
+.cr-links{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.chip-btn{display:flex;align-items:center;justify-content:center;gap:6px;height:30px;border-radius:var(--r-sm);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-size:12px;font-weight:600;color:var(--text-2)}
+.chip-btn:hover{background:var(--surface-2);color:var(--text)}
+.donate{width:100%;height:32px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:7px;font-weight:700;font-size:12.5px;color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(230,169,110,.28)}
+.donate:hover{background:rgba(230,169,110,.2)}
+
+/* ── 본문 ── */
+.main{overflow:auto;min-height:0;position:relative;user-select:text}
+.page{padding:22px 26px 32px}
+.enter{animation:fade .25s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:11.5px;letter-spacing:.12em;color:var(--muted);font-weight:700}
+h1{font-size:25px;letter-spacing:-.02em;margin:4px 0 2px;font-weight:800}
+.lede{color:var(--text-2);margin:0}
+.head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:16px}
+.seg{display:flex;background:var(--surface);border-radius:10px;padding:3px;box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{height:28px;padding:0 11px;border-radius:7px;font-size:12.5px;color:var(--muted);font-weight:600}
+.seg button.on{background:var(--surface-3);color:var(--text)}
+.variant-seg{display:inline-flex;margin:0 0 12px}
+.variant-seg button{height:32px;padding:0 16px;font-size:13px}
+
+.promos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.promo-tile{position:relative;display:flex;align-items:center;gap:14px;text-align:left;padding:14px 16px;border-radius:var(--r);overflow:hidden;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.promo-tile::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,var(--pc) -60%,transparent 70%);opacity:.22}
+.promo-tile:hover{box-shadow:inset 0 0 0 1px var(--pc)}
+.promo-tile>*{position:relative}
+.promo-ic{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;font-weight:900}
+.promo-tile small{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--pc)}
+.promo-tile b{display:block;font-size:14px;line-height:1.35;margin:1px 0}
+.promo-tile p{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
+.promo-tile .go{margin-left:auto;flex:none;height:30px;padding:0 12px;border-radius:8px;font-size:12px;font-weight:800;display:flex;align-items:center;background:var(--pc);color:#121214}
+
+.alert{display:flex;align-items:center;gap:12px;padding:11px 12px 11px 16px;border-radius:var(--r);background:linear-gradient(90deg,rgba(230,169,110,.14),rgba(230,169,110,.04));box-shadow:inset 0 0 0 1px rgba(230,169,110,.22);margin-bottom:14px}
+.alert.blue{background:linear-gradient(90deg,rgba(111,168,255,.13),rgba(111,168,255,.03));box-shadow:inset 0 0 0 1px rgba(111,168,255,.22)}
+.alert p{margin:0;flex:1;color:var(--text-2)} .alert b{color:var(--text)}
+.alert .x{color:var(--faint);width:24px;height:24px;display:grid;place-items:center;border-radius:6px}.alert .x:hover{color:var(--text);background:var(--surface-2)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{position:relative;border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s;text-align:left}
+.card:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px var(--line-2),var(--shadow)}
+.cover{aspect-ratio:16/8;background-color:var(--surface-3);background-position:center;background-size:cover;position:relative}
+.cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(24,24,29,.96))}
+.plat{position:absolute;top:10px;left:10px;right:10px;z-index:1;display:flex;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(10,10,12,.66);backdrop-filter:blur(8px);color:var(--text-2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);white-space:nowrap}
+.tag.acc{color:var(--accent-ink);background:var(--accent);box-shadow:none} .tag.blue{color:#0b1830;background:var(--blue);box-shadow:none} .tag.ok{color:var(--ok)}
+.card-body{padding:2px 14px 14px;margin-top:-24px;position:relative;z-index:1}
+.card h3{margin:0;font-size:16px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .sub{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}
+.status{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-2);min-width:0;white-space:nowrap;overflow:hidden}
+.mini{height:30px;padding:0 12px;border-radius:8px;font-size:12.5px;font-weight:700;background:var(--surface-3);color:var(--text);flex:none}
+.mini:hover{background:#30303a}
+.mini.acc{background:var(--accent);color:var(--accent-ink)} .mini.acc:hover{background:var(--accent-hi)}
+.mini.blue{background:var(--blue);color:#0b1830}
+.card.ghost{display:grid;place-items:center;text-align:center;min-height:230px;background:transparent;border:1px dashed var(--line-2);box-shadow:none;color:var(--muted)}
+.card.ghost:hover{color:var(--text);border-color:var(--accent)}
+.plus{width:42px;height:42px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2)}
+.glyph{position:absolute;inset:0;display:grid;place-items:center;font-weight:900;letter-spacing:-.04em;color:rgba(230,220,255,.85);z-index:0}
+.glyph-s{font-size:11px}.glyph-l{font-size:44px;opacity:.5}.glyph-xl{font-size:120px;opacity:.18;justify-items:end;padding-right:60px}
+.empty{grid-column:1/-1;padding:36px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:var(--r-lg)}
+
+.sub-h{display:flex;align-items:baseline;gap:10px;margin:26px 0 12px}
+.sub-h h2{margin:0;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.sub-h span{font-size:12.5px;color:var(--muted)}
+.sub-h .link{margin-left:auto}
+.panel{border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);padding:16px}
+.panel-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.panel-h h2{margin:0;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.link{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.link:hover{color:var(--accent)}
+.channel{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;margin-top:26px}
+.vids{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.vid{cursor:pointer;text-align:left}
+.vthumb{aspect-ratio:16/9;border-radius:9px;background:var(--surface-3) center/cover;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.vplay{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transition:opacity .2s;background:rgba(0,0,0,.25)}
+.vid:hover .vplay{opacity:1}
+.vt{font-size:12.5px;font-weight:600;line-height:1.4;margin-top:7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vg{font-size:11.5px;color:var(--muted);margin-top:2px}
+.stack{display:grid;gap:12px;align-content:start}
+.promo{display:flex;gap:13px;align-items:center;cursor:pointer;text-align:left;width:100%}
+.promo:hover{background:var(--surface-2)}
+.promo .pic{width:42px;height:42px;border-radius:11px;flex:none;display:grid;place-items:center;background-size:cover;background-position:center}
+.promo h3{margin:0 0 1px;font-size:14px;font-weight:800}
+.promo p{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
+.promo .arr{margin-left:auto;color:var(--faint)}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+
+/* ── 상세 ── */
+.hero{position:relative;height:240px;background-color:#111;background-position:center 30%;background-size:cover;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,14,17,.1) 0%,rgba(14,14,17,.35) 45%,var(--bg) 100%),linear-gradient(90deg,rgba(14,14,17,.75),transparent 60%)}
+.hero-in{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 26px 16px}
+.crumb{position:absolute;top:14px;left:26px;z-index:2;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);height:30px;padding:0 12px 0 8px;border-radius:8px;background:rgba(10,10,12,.5);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.crumb:hover{color:var(--text)}
+.hero h1{font-size:32px;margin:8px 0 0;letter-spacing:-.025em;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.dpage{padding:0 26px 30px}
+.welcome{display:flex;align-items:center;gap:12px;margin:14px 26px 0;padding:12px 14px;border-radius:var(--r);background:linear-gradient(90deg,rgba(230,169,110,.16),rgba(111,168,255,.08));box-shadow:inset 0 0 0 1px rgba(230,169,110,.25)}
+.welcome p{margin:0;flex:1;font-size:13px;color:var(--text-2)} .welcome b{color:var(--text)}
+.actionbar{display:flex;align-items:stretch;gap:10px;margin-top:4px}
+.primary{position:relative;flex:0 0 320px;height:54px;border-radius:var(--r);background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden;transition:background .15s,transform .1s;box-shadow:0 10px 30px rgba(230,169,110,.18)}
+.primary:hover:not(:disabled){background:var(--accent-hi)} .primary:active:not(:disabled){transform:scale(.99)}
+.primary.soft{background:#eeebe4;box-shadow:0 10px 30px rgba(255,255,255,.06)} .primary.soft:hover:not(:disabled){background:#fff}
+.primary:disabled:not(.busy){background:var(--surface-2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.sec-btn:disabled{opacity:.45}
+.primary.busy{background:var(--surface-2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2)}
+.primary .bar{position:absolute;left:0;top:0;bottom:0;background:rgba(230,169,110,.2);transition:width .25s linear}
+.primary .bar::after{content:"";position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--accent)}
+.primary span,.primary svg{position:relative}
+.primary small{font-weight:600;opacity:.65;font-size:12.5px}
+.sec-btn{height:54px;padding:0 16px;border-radius:var(--r);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:8px;font-weight:650;color:var(--text-2);white-space:nowrap}
+.sec-btn:hover{background:var(--surface-2);color:var(--text)}
+.act-note{display:flex;align-items:center;gap:8px;margin:10px 2px 0;font-size:12.5px;color:var(--muted);min-height:20px}
+.act-note b{color:var(--text-2);font-weight:600}
+.facts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr);margin-top:18px;border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.fact{padding:14px 16px;min-width:0}
+.fact+.fact{border-left:1px solid var(--line)}
+.fact-l{font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.05em;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fact-v{font-size:19px;font-weight:800;margin-top:5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fact-s{font-size:12.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:0;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--accent-soft);color:var(--accent)} .pill.off{background:var(--surface-3);color:var(--muted)} .pill.blue{background:var(--blue-soft);color:var(--blue)}
+.path{display:flex;align-items:center;gap:8px;margin-top:7px}
+.path code{flex:1;min-width:0;font-family:"Cascadia Mono",Consolas,monospace;font-size:12px;color:var(--text-2);background:var(--bg-2);padding:7px 10px;border-radius:7px;box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.path button{font-size:12px;font-weight:700;color:var(--accent);padding:0 6px;height:30px;white-space:nowrap}
+.cols{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.notes{list-style:none;margin:0;padding:0}
+.note{position:relative;padding:0 0 16px 22px}
+.note::before{content:"";position:absolute;left:4px;top:8px;bottom:-6px;width:1px;background:var(--line-2)}
+.note:last-child{padding-bottom:0}.note:last-child::before{display:none}
+.note::after{content:"";position:absolute;left:0;top:4px;width:9px;height:9px;border-radius:50%;background:var(--surface);box-shadow:inset 0 0 0 2px var(--faint)}
+.note.cur::after{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)}
+.note-h{display:flex;align-items:baseline;gap:10px}
+.note-h b{font-size:13.5px} .note-h span{font-size:12px;color:var(--muted)}
+.note ul{margin:5px 0 0;padding-left:16px;color:var(--text-2);font-size:13px}
+.note li{margin:2px 0}
+.tips{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.tips li{display:flex;gap:10px;font-size:13px;color:var(--text-2);line-height:1.55}
+.tips li svg{flex:none;margin-top:3px;color:var(--accent)}
+.res{display:grid;gap:2px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.res button{display:flex;align-items:center;justify-content:space-between;height:34px;padding:0 8px;margin:0 -8px;border-radius:7px;font-size:13px;color:var(--text-2);text-align:left}
+.res button:hover{background:var(--surface-2);color:var(--text)}
+.rvid{display:flex;gap:12px;align-items:center;margin-top:12px;padding:10px;border-radius:10px;background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line);width:100%;text-align:left}
+.rvid:hover{box-shadow:inset 0 0 0 1px rgba(255,78,69,.5)}
+.rvid .vthumb{width:112px;flex:none}
+.rvid b{font-size:12.5px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rvid small{display:flex;align-items:center;gap:5px;color:var(--yt);font-weight:700;font-size:11px;margin-bottom:3px}
+.disc{margin-top:12px}
+.more{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.mcard{text-align:left;border-radius:12px;overflow:hidden;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);cursor:pointer}
+.mcard:hover{box-shadow:inset 0 0 0 1px var(--line-2)}
+.mcard .cover{aspect-ratio:16/7}
+.mcard div.t{padding:0 10px 10px;margin-top:-14px;position:relative;z-index:1}
+.mcard b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcard small{font-size:11.5px;color:var(--muted)}
+
+/* ── 모달·토스트 ── */
+.scrim{position:fixed;inset:0;background:rgba(6,6,8,.62);backdrop-filter:blur(4px);display:none;place-items:center;z-index:50}
+.scrim.on{display:grid;animation:fade .2s}
+.modal{width:460px;max-height:calc(100vh - 60px);overflow:auto;border-radius:18px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2),var(--shadow);padding:24px}
+.modal.wide{width:620px}
+.modal h2{margin:0 0 6px;font-size:20px;font-weight:800}
+.modal p{margin:0 0 16px;color:var(--text-2);font-size:13.5px;line-height:1.65}
+.dn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:12px;background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:8px;text-align:left}
+.dn:hover{box-shadow:inset 0 0 0 1px rgba(230,169,110,.45)}
+.dn b{display:block;font-size:14px} .dn span{font-size:12px;color:var(--muted)}
+.dn .arr{margin-left:auto;color:var(--faint)}
+.dn-ic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-weight:900;font-size:13px;flex:none}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.ghost-btn{height:36px;padding:0 14px;border-radius:9px;color:var(--text-2);font-weight:600;font-size:13px}
+.ghost-btn:hover{background:var(--surface-2);color:var(--text)}
+.done-ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--ok-soft);color:var(--ok);margin-bottom:12px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;background:#24242b;box-shadow:inset 0 0 0 1px var(--line-2),var(--shadow);font-size:13px;font-weight:600;transition:all .25s var(--ease);z-index:60;pointer-events:none;max-width:80%}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.err{box-shadow:inset 0 0 0 1px rgba(232,102,122,.5),var(--shadow)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="titlebar" id="titlebar">
+    <div class="brand"><div class="mark"></div><b>ZECOLE</b><span>한글패치 런처</span></div>
+    <div class="tb-sp" data-drag></div>
+    <div class="tb-meta num" id="syncMeta" data-drag></div>
+    <div id="updPill"></div>
+    <div class="winbtns">
+      <button onclick="host('win.minimize')" aria-label="최소화"><svg width="10" height="10"><path d="M0 5h10" stroke="currentColor"/></svg></button>
+      <button class="x" onclick="closeApp()" aria-label="닫기"><svg width="10" height="10"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor"/></svg></button>
+    </div>
+  </header>
+  <div class="body">
+    <aside class="side">
+      <div class="side-scroll">
+        <button class="nav" id="navHome" onclick="go('home')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          라이브러리<span class="cnt" id="updCnt" hidden></span>
+        </button>
+        <div id="sideList"><div class="sec">한글패치</div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+      </div>
+      <div class="side-foot">
+        <div id="sidePromo"></div>
+        <div class="cr-links">
+          <button class="chip-btn" onclick="openUrl(C.youtube.url)"><svg width="14" height="14" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="5" fill="var(--yt)"/><path d="M10 8.5v7l6-3.5z" fill="#fff"/></svg>YouTube</button>
+          <button class="chip-btn" onclick="openUrl(C.links.web)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>zecole.store</button>
+        </div>
+        <button class="donate" onclick="showDonate()"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.4 3 5 6.4 5c2 0 3.3 1 5.6 3.3C14.3 6 15.6 5 17.6 5 21 5 23 8.4 21.6 11.7 19.5 16.4 12 21 12 21z"/></svg>제작 후원하기</button>
+        <button class="link" style="display:block;margin:8px auto 0;font-size:11px;color:var(--faint)" onclick="showNotices()">오픈소스 고지 · MIT 라이선스</button>
+      </div>
+    </aside>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="if(event.target===this)hideModal()"><div class="modal" id="modal" role="dialog"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ══════════════════════════════════════════════════════════════
+   런처 연결 (C# ↔ JS). 브라우저 미리보기에서는 mock 으로 동작
+   ══════════════════════════════════════════════════════════════ */
+const IN_APP = !!(window.chrome && window.chrome.webview);
+if (!IN_APP) document.body.classList.add("preview");
+let _seq = 0; const _wait = new Map(); const _listeners = {};
+if (IN_APP) {
+  window.chrome.webview.addEventListener("message", e => {
+    const m = e.data;
+    if (m && m.event) return (_listeners[m.event] || []).forEach(f => f(m.data));
+    const w = _wait.get(m.id); if (!w) return; _wait.delete(m.id);
+    m.ok ? w.res(m.result) : w.rej(new Error(m.error || "오류"));
+  });
+}
+function host(cmd, args = {}) {
+  if (!IN_APP) return Mock[cmd] ? Mock[cmd](args) : Promise.resolve(null);
+  const id = ++_seq;
+  return new Promise((res, rej) => { _wait.set(id, { res, rej }); window.chrome.webview.postMessage({ id, cmd, args }); });
+}
+const on = (evt, f) => (_listeners[evt] = _listeners[evt] || []).push(f);
+const emit = (evt, d) => (_listeners[evt] || []).forEach(f => f(d));
+
+const Mock = {
+  "app.info": async () => ({ version: "1.0.0", startHint: new URLSearchParams(location.search).get("game"), exeName: "ZECOLE_Launcher.exe" }),
+  "net.get": async ({ url }) => { try { const r = await fetch(url); return { status: r.status, body: r.ok ? await r.text() : null }; } catch { return { status: 0, body: null }; } },
+  "youtube.feed": async () => [],
+  "steam.apps": async () => ({ "2609610": { name: "CONVRGENCE", path: "D:\\SteamLibrary\\steamapps\\common\\CONVRGENCE" }, "559330": { name: "A Fisherman's Tale", path: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\A Fisherman's Tale" } }),
+  "status.scan": async () => ({ convrgence: { usedBefore: true, installedVersion: "1.5.1" }, h3vr2: { usedBefore: true, lastRun: { tag: "v0.4.0" } } }),
+  "install.start": ({ id }) => new Promise(res => {
+    let d = 0; const total = 50e6;
+    const t = setInterval(() => {
+      d = Math.min(total, d + 2.5e6); emit("install-progress", { id, phase: "download", done: d, total, secs: d / 8e6 });
+      if (d >= total) { clearInterval(t); emit("install-progress", { id, phase: "verify" });
+        setTimeout(() => { emit("install-progress", { id, phase: "running" }); setTimeout(() => { emit("install-progress", { id, phase: "done" }); res({ exitCode: 0 }); }, 1600); }, 500); }
+    }, 90);
+  }),
+  "open.url": async ({ url }) => toast("브라우저에서 엽니다 · " + url.replace(/^https?:\/\//, "")),
+};
+
+/* ══════════════════════════════════════════════════════════════
+   상태
+   ══════════════════════════════════════════════════════════════ */
+let C = null;                 // 설정 (catalog.json ← feed.json)
+let ITEMS = [];               // 게임/모드 목록
+let SUBS = [];                // 목록에 따로 보이지 않는 하위 판 (예: A Fisherman's Tale Quest판)
+const byId = id => ITEMS.find(x => x.id === id) || SUBS.find(x => x.id === id);
+const setItems = list => { ITEMS = list; SUBS = list.flatMap(i => i.subs || []); };
+let VIDEOS = [];              // 유튜브 최신 영상
+let STEAM = {};               // 이 PC 의 Steam 게임
+const S = { q: {}, qprog: {}, qbusy: null, view: "home", filter: store("filter") || "all", busy: null, sync: "checking", syncedAt: null, info: {}, welcome: null, update: null, hintDone: false };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem("zl." + k)); localStorage.setItem("zl." + k, JSON.stringify(v)); } catch { return null; } }
+const cleanV = t => String(t || "").replace(/^v\.?/i, "").trim();
+const cmpV = (a, b) => { const pa = cleanV(a).split(/[.\-]/), pb = cleanV(b).split(/[.\-]/); for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const x = pa[i] ?? "", y = pb[i] ?? ""; const nx = /^\d+$/.test(x), ny = /^\d+$/.test(y); if (nx && ny) { if (+x !== +y) return +x - +y; } else if (x !== y) { if (!x) return 1; if (!y) return -1; return x < y ? -1 : 1; } } return 0; };
+const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9가-힣]/g, "");
+const daysAgo = d => d ? (Date.now() - new Date(d)) / 864e5 : 999;
+const fmtDate = d => d ? d.slice(0, 10) : "";
+const MB = n => (n / 1048576).toFixed(n > 1048576 * 100 ? 0 : 1) + "MB";
+
+const ICON = {
+  play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  down: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  folder: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  back: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+  ext: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg>',
+  check: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  info: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.1"/></svg>',
+  refresh: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>',
+  x: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  yt: '<svg width="16" height="16" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="5" fill="var(--yt)"/><path d="M10 8.5v7l6-3.5z" fill="#fff"/></svg>',
+  gh: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>',
+  heart: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.4 3 5 6.4 5c2 0 3.3 1 5.6 3.3C14.3 6 15.6 5 17.6 5 21 5 23 8.4 21.6 11.7 19.5 16.4 12 21 12 21z"/></svg>',
+  globe: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>',
+  gift: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8S10.5 3 7.5 3a2.5 2.5 0 0 0 0 5M12 8s1.5-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>',
+  tag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>',
+};
+
+/* ══════════════════════════════════════════════════════════════
+   카탈로그: 기본값(catalog.json) + 원격 운영 파일(feed.json) + GitHub 저장소
+   새 저장소에 릴리스만 올리면 자동으로 목록에 추가됨.
+   저장소에 zecole.json 을 두면 이름·플랫폼·설치 방식 등을 직접 지정.
+   ══════════════════════════════════════════════════════════════ */
+async function getJson(url, maxAgeSec = 0) {
+  try {
+    const r = await host("net.get", { url, maxAgeSec });
+    if (!r || r.status !== 200 || !r.body) return { data: null, status: r?.status ?? 0, stale: r?.stale };
+    return { data: JSON.parse(r.body), status: 200, stale: !!r.stale };
+  } catch { return { data: null, status: 0 }; }
+}
+const deepMerge = (a, b) => { if (!b) return a; const o = Array.isArray(a) ? [...a] : { ...a }; for (const k in b) o[k] = (b[k] && typeof b[k] === "object" && !Array.isArray(b[k]) && a && typeof a[k] === "object" && !Array.isArray(a[k])) ? deepMerge(a[k], b[k]) : b[k]; return o; };
+
+function deriveFromRepo(repo) {
+  const n = repo.name, d = repo.description || "";
+  const text = n + " " + d;
+  const kind = /korean|한국어|한글/i.test(text) ? "patch" : /mod\b|모드/i.test(text) ? "mod" : "tool";
+  const platforms = [];
+  if (/pc\s?vr|steam/i.test(text)) platforms.push("pcvr");
+  if (/quest|퀘스트/i.test(text)) platforms.push("quest");
+  const name = n.replace(/[-_]?(korean[-_]?patch|koreanpatch)/i, "").replace(/[-_]?quest$/i, "").replace(/[-_]+/g, " ").trim() || n;
+  return { id: norm(n).slice(0, 24), kind, name, sub: d.split("|")[0].replace(/·?\s*제작.*$/, "").trim().slice(0, 60), platforms: platforms.length ? platforms : ["pcvr"], install: {} };
+}
+
+function pickAsset(item, release) {
+  const assets = release.assets || [];
+  const mode = item.install?.mode;
+  if (mode === "page") return null;
+  const re = item.install?.asset ? new RegExp(item.install.asset, "i") : null;
+  const bad = /diagnostic|debug|symbols|\.sha256$|sha256sums|readme|license|\.txt$|\.md$/i;
+  let a = re ? assets.find(x => re.test(x.name)) : null;
+  if (!a && !re && mode !== "engine") a = assets.find(x => /\.exe$/i.test(x.name) && !bad.test(x.name));
+  if (!a && mode === "zip") a = assets.find(x => /\.zip$/i.test(x.name) && !bad.test(x.name));
+  if (!a) return null;
+  return { name: a.name, url: a.browser_download_url, size: a.size, digest: a.digest || null, mode: mode === "engine" ? "engine" : /\.zip$/i.test(a.name) ? "zip" : "exe" };
+}
+
+function bullets(body) {
+  return (body || "").split(/\r?\n/).filter(l => /^\s*[-*] /.test(l))
+    .map(l => l.replace(/^\s*[-*] /, "").replace(/\*\*|`/g, "").replace(/\[(.*?)\]\(.*?\)/g, "$1").trim())
+    .filter(l => l.length > 3 && l.length < 120 && !/source code|sha-?256|다운로드/i.test(l)).slice(0, 3);
+}
+
+const SAFE_ID = /^[a-z0-9][a-z0-9-]{0,40}$/, SAFE_KEY = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,80}$/;
+function finishItem(it, releases) {
+  if (!SAFE_ID.test(it.id || "")) it.id = norm(it.repo || "item").slice(0, 24) || "item";
+  it.platforms = it.platforms || ["pcvr"];
+  it.tint = it.tint || "#23232b";
+  const steamImg = (f) => it.steamAppId ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${it.steamAppId}/${f}` : null;
+  it.artList = [it.art, steamImg("library_hero.jpg"), it.video && `https://i.ytimg.com/vi/${it.video}/maxresdefault.jpg`].filter(Boolean);
+  it.thumbList = [it.thumb, steamImg("header.jpg"), steamImg("library_hero.jpg"), it.art, it.video && `https://i.ytimg.com/vi/${it.video}/hqdefault.jpg`].filter(Boolean);
+  const rel = (releases || []).filter(r => !r.prerelease && !r.draft);
+  if (rel.length) {
+    it.tag = rel[0].tag_name; it.latest = cleanV(rel[0].tag_name); it.date = fmtDate(rel[0].published_at);
+    it.releaseUrl = rel[0].html_url; it.asset = pickAsset(it, rel[0]);
+    it.noteList = rel.slice(0, 3).map(r => ({ v: cleanV(r.tag_name), d: fmtDate(r.published_at), items: it.notes?.[cleanV(r.tag_name)] || bullets(r.body) }))
+      .map(n => n.items.length ? n : { ...n, items: ["자세한 내용은 GitHub 릴리스에서 확인해 주세요."] });
+  } else if (it.notes) {
+    const vs = Object.keys(it.notes).sort((a, b) => cmpV(b, a));
+    it.latest = vs[0]; it.tag = "v" + vs[0];
+    it.noteList = vs.slice(0, 3).map(v => ({ v, d: "", items: it.notes[v] }));
+  }
+  it.repoUrl = `https://github.com/${C.github}/${it.repo}`;
+  it.releaseUrl = it.releaseUrl || it.repoUrl + "/releases/latest";
+  it.mode = it.install?.mode === "page" ? "page" : (it.asset?.mode || (it.asset ? "exe" : "page"));
+  // 같은 저장소의 다른 판(예: Quest판)은 하위 항목으로 만들고, 상세 화면에서 전환 버튼으로 오감
+  if (Array.isArray(it.variants) && !it.parentId) {
+    const base = { ...it }; delete base.variants; delete base.subs; delete base.asset; delete base.status;
+    // 5) 하위 판은 보관 폴더 이름을 반드시 따로 씀 (같은 저장소를 쓰는 상위 판의 받은 파일과 섞이지 않게)
+    it.subs = it.variants.filter(v => v && SAFE_ID.test(v.id || "") && v.id !== it.id)
+      .map(v => finishItem({ ...base, ...v, parentId: it.id, pkgKey: SAFE_KEY.test(v.pkgKey || "") && v.pkgKey !== it.repo ? v.pkgKey : it.repo + "." + v.id }, releases));
+  }
+  return it;
+}
+
+async function loadCatalog() {
+  const base = await (await fetch("catalog.json", { cache: "no-store" })).json();
+  C = base;
+  // 1) 원격 운영 파일: 홍보 문구·링크·공지·게임 정보 덮어쓰기 (런처 재배포 없이 수정)
+  for (const u of base.feedUrls || []) {
+    const r = await getJson(u, 900);
+    if (r.data) { C = deepMerge(C, r.data); break; }
+  }
+  // 오프라인이어도 바로 보이게 기본값으로 먼저 그림
+  if (!ITEMS.length) { setItems(Object.entries(C.items).map(([repo, m]) => finishItem({ repo, ...m }, null))); sortItems(); render(); }
+
+  // 2) GitHub 저장소 목록 → 릴리스가 있는 저장소는 자동 등록
+  const list = await getJson(`https://api.github.com/users/${C.github}/repos?per_page=100&sort=pushed`, 600);
+  const hidden = new Set((C.hiddenRepos || []).map(s => s.toLowerCase()));
+  let repos = (list.data || []).filter(r => !r.fork && !r.archived && !r.private && !hidden.has(r.name.toLowerCase()));
+  if (!repos.length) repos = Object.keys(C.items).map(name => ({ name, description: "" }));
+
+  const built = await Promise.all(repos.map(async repo => {
+    const [man, rels] = await Promise.all([
+      getJson(`https://raw.githubusercontent.com/${C.github}/${repo.name}/HEAD/zecole.json`, 3600),
+      getJson(`https://api.github.com/repos/${C.github}/${repo.name}/releases?per_page=5`, 300),
+    ]);
+    const item = deepMerge(deepMerge(deriveFromRepo(repo), C.items[repo.name] || {}), man.data || {});
+    if (item.hidden) return null;
+    const rel = Array.isArray(rels.data) ? rels.data : null;
+    if (!rel && !C.items[repo.name] && !man.data) return null;            // 릴리스 없는 새 저장소는 아직 숨김
+    if (rel && !rel.some(r => !r.prerelease) && !man.data?.comingSoon) return null;
+    return finishItem({ repo: repo.name, ...item, isNewRepo: !C.items[repo.name] }, rel);
+  }));
+  setItems(built.filter(Boolean));
+  sortItems();
+  { const cur = byId(S.view); if (cur && cur.mode === "engine" && !S.qbusy && (!S.q[cur.id] || S.q[cur.id].checking)) engineCheck(cur)(cur.id); }
+  S.sync = list.data ? (list.stale ? "stale" : "ok") : "offline";
+  S.syncedAt = Date.now();
+}
+function sortItems() {
+  const k = { patch: 0, mod: 1, tool: 2 };
+  ITEMS.sort((a, b) => (k[a.kind] ?? 3) - (k[b.kind] ?? 3) || (b.date || "").localeCompare(a.date || "") || (a.order ?? 999) - (b.order ?? 999));
+}
+
+async function refreshStatus() {
+  try {
+    const all = [...ITEMS, ...SUBS];
+    const res = await host("status.scan", { items: all.map(i => ({ id: i.id, repo: i.repo, stateDir: i.stateDir || null, detect: i.detect || null })) });
+    all.forEach(i => { i.status = res?.[i.id] || {}; if (i.parentId) i.status = { ...i.status, lastRun: null }; });
+  } catch { }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   상태 판단
+   ══════════════════════════════════════════════════════════════ */
+const isPatch = g => g.kind === "patch";
+const platLabel = g => g.platforms.includes("pcvr") && g.platforms.includes("quest") ? "PC VR · Quest" : g.platforms.includes("quest") ? (isPatch(g) ? "Quest 단독" : "Quest") : "PC VR";
+const isQuest = g => g.platforms.includes("quest");
+// Steam 감지는 PC VR 패치에만 의미 있음 (Quest 단독 패치는 Steam판에 적용 안 됨)
+const steamOf = g => g.platforms.includes("pcvr") && g.steamAppId && STEAM[g.steamAppId];
+const isNewRelease = g => daysAgo(g.date) <= 10;
+function seenNew(g) { const seen = store("seen") || []; return g.isNewRepo && !seen.includes(g.repo); }
+
+function stat(g) {
+  if (!g.subs?.length) return statOne(g);
+  const all = [statOne(g), ...g.subs.map(statOne)], rank = { update: 0, ok: 1, ran: 2 };
+  return all.filter(x => x.key in rank).sort((a, b) => rank[a.key] - rank[b.key])[0] || all[0];
+}
+function statOne(g) {
+  const st = g.status || {};
+  const inst = st.installedVersion ? cleanV(st.installedVersion) : null;
+  const ran = st.lastRun?.tag && st.lastRun.exitCode === 0 ? cleanV(st.lastRun.tag) : null; // 정상 종료한 설치기만 인정
+  const L = g.latest;
+  const what = isPatch(g) ? "한글패치" : g.kind === "mod" ? "모드" : "앱";
+  if (inst) {
+    if (L && cmpV(inst, L) < 0) return { key: "update", label: "업데이트 있음", dot: "warn", inst, what };
+    return { key: "ok", label: "최신 버전", dot: "", inst, what };
+  }
+  if (ran) {
+    if (L && cmpV(ran, L) < 0) return { key: "update", label: "업데이트 있음", dot: "warn", inst: ran, what, guess: true };
+    return { key: "ran", label: "설치기 실행함", dot: "", inst: ran, what, guess: true };
+  }
+  if (st.usedBefore) return { key: "used", label: "이 PC에서 사용 기록", dot: "blue", what };
+  return { key: "new", label: "미설치", dot: "off", what };
+}
+function primaryLabel(g, s) {
+  if (g.mode === "page") return { text: "GitHub에서 받기", icon: ICON.ext, cls: "soft" };
+  if (s.key === "update") return { text: `${s.what} 업데이트`, ver: g.latest, icon: ICON.down };
+  if (s.key === "ok" || s.key === "ran") return { text: "설치기 다시 열기", ver: g.latest, icon: ICON.down, cls: "soft" };
+  if (s.key === "used") return { text: "최신 설치기 받기", ver: g.latest, icon: ICON.down };
+  return { text: `${s.what} 설치`, ver: g.latest, icon: ICON.down };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   그리기
+   ══════════════════════════════════════════════════════════════ */
+const bgImg = (list, tint) => `background-image:${[...list.map(u => `url('${u}')`), `linear-gradient(135deg,${tint},#15151a)`].join(",")}`;
+const glyph = (g, size) => (size === "s" ? g.thumbList : g.artList).length ? "" : `<span class="glyph glyph-${size}">${esc(g.glyph || g.name[0])}</span>`;
+
+function variantPick(g) {
+  if (!g || !g.subs?.length) return g?.id;
+  const pref = (store("variant") || {})[g.id];
+  if (pref && (pref === g.id || g.subs.some(x => x.id === pref))) return pref;
+  return steamOf(g) ? g.id : g.subs[0].id;
+}
+function pickVariant(parentId, id) { const v = store("variant") || {}; v[parentId] = id; store("variant", v); go(id, true); }
+function go(view, exact) { if (!exact) view = variantPick(byId(view)) || view; S.view = view; { const gg = byId(view); if (gg && gg.mode === "engine" && !S.qbusy) engineCheck(gg)(view); } if (view !== "home") { const seen = store("seen") || []; const g = byId(view); if (g && !seen.includes(g.repo)) store("seen", [...seen, g.repo]); } render(); $("#main").scrollTop = 0; }
+function openUrl(u) { if (u) host("open.url", { url: u }); }
+function toast(msg, kind) {
+  const t = $("#toast"); t.className = "toast" + (kind === "err" ? " err" : "");
+  t.innerHTML = (kind === "ok" ? `<span style="color:var(--ok)">${ICON.check}</span>` : "") + esc(msg);
+  void t.offsetWidth; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 2800);
+}
+function showModal(html, wide) { const m = $("#modal"); m.className = "modal" + (wide ? " wide" : ""); m.innerHTML = html; $("#scrim").classList.add("on"); }
+function hideModal() { $("#scrim").classList.remove("on"); }
+
+function renderTitle() {
+  const el = $("#syncMeta");
+  setHtml(el, S.sync === "checking" ? `<span class="dot warn pulse"></span>GitHub 확인 중`
+    : S.sync === "ok" ? `<span class="dot"></span>GitHub 최신 정보`
+    : S.sync === "stale" ? `<span class="dot warn"></span>잠시 후 다시 확인 · 마지막 정보 표시`
+    : `<span class="dot off"></span>오프라인 · 기본 정보 표시`);
+  setHtml($("#updPill"), S.update ? `<button class="tb-pill" onclick="applyUpdate()">${ICON.down.replace(/18/g, "13")}런처 ${esc(S.update.version)} 업데이트</button>` : "");
+}
+
+function sideItem(g) {
+  const s = stat(g);
+  const sub = s.key === "update" ? `<span class="dot warn"></span><span class="warn-t">업데이트 ${esc(g.latest)}</span>`
+    : s.key === "ok" || s.key === "ran" ? `<span class="dot"></span>v${esc(s.inst)}`
+    : `<span class="dot ${s.dot}"></span>${g.latest ? "v" + esc(g.latest) : "준비 중"}${seenNew(g) ? ' <span class="badge blue">새로 등록</span>' : isNewRelease(g) ? ' <span class="badge">NEW</span>' : ""}`;
+  return `<button class="gitem ${S.view === g.id || byId(S.view)?.parentId === g.id ? "on" : ""}" onclick="go('${g.id}')" title="${esc(g.name)}">
+    <span class="thumb" style="${bgImg(g.thumbList, g.tint)}">${glyph(g, "s")}</span>
+    <span class="gmeta"><div class="gname">${esc(g.name)}</div><div class="gsub num">${sub}</div></span></button>`;
+}
+function setHtml(el, html) { if (el._html !== html) { el._html = html; el.innerHTML = html; } }
+function renderSide() {
+  const groups = [["patch", "한글패치"], ["mod", "VR 모드"], ["tool", "VR 도구"]];
+  $("#navHome").classList.toggle("on", S.view === "home");
+  const ups = ITEMS.filter(g => stat(g).key === "update").length;
+  const c = $("#updCnt"); c.hidden = !ups; c.textContent = ups;
+  setHtml($("#sideList"), groups.map(([k, l]) => {
+    const list = ITEMS.filter(g => (g.kind || "tool") === k);
+    return list.length ? `<div class="sec">${l} <em class="num">${list.length}</em></div>` + list.map(sideItem).join("") : "";
+  }).join(""));
+  const p = (C.promos || [])[(store("promoIdx") || 0) % Math.max(1, (C.promos || []).length)];
+  setHtml($("#sidePromo"), p ? `<button class="side-promo" style="--pc:${p.accent || "var(--blue)"}" onclick="openUrl('${esc(p.url)}')"><small style="color:${p.accent || "var(--blue)"}">${esc(p.tag)}</small><b>${esc(p.title)}</b></button>` : "");
+}
+
+function promoTiles(list) {
+  return `<div class="promos">${list.map((p, i) => `
+    <button class="promo-tile" style="--pc:${p.accent || "#6fa8ff"}" onclick="openUrl('${esc(p.url)}')">
+      <span class="promo-ic" style="background:color-mix(in srgb,${p.accent || "#6fa8ff"} 18%,transparent);color:${p.accent || "#6fa8ff"}">${i % 2 ? ICON.tag : ICON.gift}</span>
+      <span style="min-width:0"><small>${esc(p.tag)}</small><b>${esc(p.title)}</b><p>${esc(p.body)}</p></span>
+    </button>`).join("")}</div>`;
+}
+
+function gameCard(g) {
+  const s = stat(g);
+  const foot = s.key === "update" ? `v${esc(s.inst)} → <b style="color:var(--accent)">${esc(g.latest)}</b>`
+    : s.key === "ok" ? `설치됨 · v${esc(s.inst)}` : s.key === "ran" ? `설치기 실행 · v${esc(s.inst)}`
+    : steamOf(g) ? `<span style="color:var(--blue)">Steam에 게임 있음</span>`
+    : `v${esc(g.latest || "-")}${g.date ? " · " + g.date.slice(5).replace("-", ".") : ""}`;
+  const btn = s.key === "update" ? `<button class="mini acc" onclick="event.stopPropagation();install('${g.id}')">업데이트</button>`
+    : s.key === "new" || s.key === "used" ? `<button class="mini ${steamOf(g) ? "blue" : ""}" onclick="event.stopPropagation();${g.mode === "page" ? `go('${g.id}')` : `install('${g.id}')`}">${g.mode === "page" ? "보기" : "설치"}</button>`
+    : `<button class="mini" onclick="event.stopPropagation();go('${g.id}')">보기</button>`;
+  const flag = seenNew(g) ? '<span class="tag blue">새로 등록</span>' : isNewRelease(g) ? '<span class="tag acc">NEW</span>' : "";
+  return `<article class="card" onclick="go('${g.id}')" tabindex="0" onkeydown="if(event.key==='Enter')go('${g.id}')">
+    <div class="cover" style="${bgImg(g.artList, g.tint)}">${glyph(g, "l")}<div class="plat"><span class="tag">${platLabel(g)}</span>${flag}</div></div>
+    <div class="card-body"><h3>${esc(g.name)}</h3><div class="sub">${esc(g.sub || "")}</div>
+      <div class="card-foot"><div class="status num"><span class="dot ${s.dot}"></span>${foot}</div>${btn}</div></div>
+  </article>`;
+}
+
+function videoCard(v) {
+  return `<button class="vid" onclick="openUrl('https://youtu.be/${esc(v.id)}')">
+    <div class="vthumb" style="background-image:url('https://i.ytimg.com/vi/${esc(v.id)}/mqdefault.jpg')"><div class="vplay"><svg width="34" height="34" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,.6)"/><path d="M10 8v8l6-4z" fill="#fff"/></svg></div></div>
+    <div class="vt">${esc(v.title.split("|")[0])}</div><div class="vg">${esc((v.title.split("|")[1] || "").trim() || fmtDate(v.published))}</div></button>`;
+}
+
+function renderHome() {
+  const patches = ITEMS.filter(isPatch), extras = ITEMS.filter(g => !isPatch(g));
+  const ups = ITEMS.filter(g => stat(g).key === "update");
+  const inst = ITEMS.filter(g => ["ok", "ran", "update"].includes(stat(g).key)).length;
+  const match = g => S.filter === "all" || (S.filter === "installed" ? ["ok", "ran", "update"].includes(stat(g).key) : S.filter === "pc" ? g.platforms.includes("pcvr") : g.platforms.includes("quest"));
+  const list = patches.filter(match), ex = extras.filter(match);
+  const owned = patches.filter(g => steamOf(g) && ["new", "used"].includes(stat(g).key));
+  const notice = C.notice && store("noticeX") !== C.notice.id ? C.notice : null;
+
+  return `<div class="page${S._enter ? " enter" : ""}">
+    <div class="head-row">
+      <div><div class="eyebrow">ZECOLE KOREAN PATCH</div><h1>한글패치 라이브러리</h1>
+        <p class="lede num">${patches.length}개 게임 한글패치${extras.length ? ` · 모드·도구 ${extras.length}개` : ""} · 이 PC 설치 ${inst}${ups.length ? ` · <span style="color:var(--accent)">업데이트 ${ups.length}건</span>` : ""}</p></div>
+      <div class="seg">${[["all", "전체"], ["installed", "설치됨"], ["pc", "PC VR"], ["quest", "Quest"]].map(([k, l]) =>
+        `<button class="${S.filter === k ? "on" : ""}" onclick="S.filter='${k}';store('filter','${k}');render()">${l}</button>`).join("")}</div>
+    </div>
+    ${notice ? `<div class="alert blue">${ICON.info}<p>${esc(notice.text)}</p>${notice.url ? `<button class="mini" onclick="openUrl('${esc(notice.url)}')">자세히</button>` : ""}<button class="x" onclick="store('noticeX','${esc(notice.id)}');render()">${ICON.x}</button></div>` : ""}
+    ${ups.length ? `<div class="alert">${ICON.info.replace('stroke="currentColor"', 'stroke="var(--accent)"')}
+      <p><b>${ups.map(g => esc(g.name)).join(", ")}</b> 새 버전이 나왔습니다.</p>
+      <button class="mini acc" onclick="go('${ups[0].id}')">확인하기</button></div>` : ""}
+    ${owned.length ? `<div class="alert blue"><span style="color:var(--blue)">${ICON.check}</span>
+      <p>이 PC의 Steam에서 한글패치가 있는 게임 <b>${owned.length}개</b>를 찾았어요 · <b>${owned.map(g => esc(g.name)).join(", ")}</b></p>
+      <button class="mini blue" onclick="go('${owned[0].id}')">바로 보기</button></div>` : ""}
+    ${promoTiles(C.promos || [])}
+    <div class="grid">
+      ${list.map(gameCard).join("") || `<div class="empty">조건에 맞는 한글패치가 없습니다.</div>`}
+    </div>
+    ${ex.length ? `<div class="sub-h"><h2>VR 모드 · 도구</h2><span>한글패치 외에 제콜이 만든 것들</span></div>
+      <div class="tools">${ex.map(g => `<button class="panel promo" onclick="go('${g.id}')">
+        <span class="pic" style="${bgImg(g.thumbList, g.tint)};font-weight:900;font-size:12px;color:#d9ccff">${g.thumbList.length ? "" : esc(g.glyph || g.name[0])}</span>
+        <span><h3>${esc(g.name)} <span class="pill off num" style="margin-left:4px">v${esc(g.latest || "-")}</span></h3><p>${esc(g.sub)} · ${platLabel(g)}</p></span>
+        <span class="arr">→</span></button>`).join("")}</div>` : ""}
+    <section class="channel">
+      <div class="panel">
+        <div class="panel-h"><h2>${ICON.yt.replace(/16/g, "20")}제콜 채널 최신 영상</h2><button class="link" onclick="openUrl(C.youtube.url)">채널 구독하기 ${ICON.ext}</button></div>
+        <div class="vids">${VIDEOS.slice(0, 4).map(videoCard).join("") || `<div class="empty" style="grid-column:1/-1;padding:24px">영상을 불러오는 중이거나 오프라인입니다.</div>`}</div>
+      </div>
+      <div class="stack">
+        <button class="panel promo" onclick="openUrl(C.links.web)">
+          <span class="pic" style="background:var(--accent-soft);color:var(--accent)">${ICON.globe}</span>
+          <span><h3>zecole.store</h3><p>메타 퀘스트 게임 정보, 할인 소식, 한글 지원 여부를 한곳에서.</p></span><span class="arr">${ICON.ext}</span></button>
+        <button class="panel promo" onclick="openUrl(C.links.github)">
+          <span class="pic" style="background:var(--surface-3);color:var(--text)">${ICON.gh.replace(/15/g, "20")}</span>
+          <span><h3>GitHub · ${esc(C.github)}</h3><p>모든 패치의 원본 파일, 릴리스, 오역 제보.</p></span><span class="arr">${ICON.ext}</span></button>
+        <button class="panel promo" onclick="showDonate()">
+          <span class="pic" style="background:rgba(232,102,122,.12);color:var(--err)">${ICON.heart.replace(/16/g, "20")}</span>
+          <span><h3>한글패치 제작 후원</h3><p>모든 패치는 무료입니다. 다음 게임 작업에 힘을 보태주세요.</p></span><span class="arr">→</span></button>
+      </div>
+    </section>
+  </div>`;
+}
+
+function relatedVideo(g) {
+  const keys = [g.id, g.name, (g.name || "").split(":")[0], ...(g.keywords || [])].map(norm).filter(k => k.length >= 4);
+  return VIDEOS.find(v => g.video === v.id) || VIDEOS.find(v => keys.some(k => norm(v.title).includes(k))) || (g.video ? { id: g.video, title: g.name + " 한글패치 소개 영상" } : null);
+}
+
+function busyHere(g) { return S.busy && (S.busy.id === g.id || S.busy.viewId === g.id); }
+function renderDetail(g) {
+  const s = statOne(g), busy = S.busy && S.busy.id === g.id, otherBusy = S.busy && !busy;
+  const pl = primaryLabel(g, s);
+  let label, cls = pl.cls || "";
+  if (busy) {
+    const b = S.busy; cls = "busy";
+    const pct = b.phase === "download" && b.total > 0 ? b.done / b.total * 100 : b.phase === "download" ? 5 : 100;
+    const speed = b.secs > 0.5 ? ` · ${MB(b.done / b.secs)}/s` : "";
+    const txt = { download: `받는 중 ${b.total > 0 ? Math.floor(pct) + "% · " + MB(b.done) + " / " + MB(b.total) + speed : ""}`, verify: "파일 검증 중", extract: "압축 푸는 중", running: "설치기 실행 중", done: "완료" }[b.phase] || "준비 중";
+    label = `<div class="bar" style="width:${b.phase === "running" ? 100 : pct}%"></div><span class="num">${txt}</span>`;
+  } else label = `${pl.icon}<span>${pl.text}${pl.ver ? ` <small class="num">v${esc(pl.ver)}</small>` : ""}</span>`;
+
+  const sOwned = steamOf(g);
+  let note = busy ? (S.busy.phase === "running"
+      ? `<span class="dot warn pulse"></span><b>설치기 창에서 설치를 진행해 주세요.</b> 설치기를 닫으면 런처가 결과를 확인합니다.`
+      : `<span class="dot warn"></span>GitHub에서 받은 파일을 해시로 검증한 뒤 실행합니다.${S.busy.phase === "download" ? ` <button class="link" onclick="host('install.cancel')">취소</button>` : ""}`)
+    : g.mode === "page" ? `<span class="dot blue"></span>이 패치는 GitHub 릴리스 페이지의 안내에 따라 설치합니다.`
+    : s.key === "ok" ? `<span class="dot"></span><b>최신 버전이 설치돼 있습니다.</b> 제거·원본 복구도 설치기에서 할 수 있어요.`
+    : s.key === "ran" ? `<span class="dot"></span><b>v${esc(s.inst)} 설치기를 실행했습니다.</b> 제거·원본 복구도 설치기에서 할 수 있어요.`
+    : s.key === "update" ? `<span class="dot warn"></span><b>v${esc(s.inst)} → v${esc(g.latest)}</b> · ${g.asset ? MB(g.asset.size) : ""} · ${esc(g.date)} 배포`
+    : `<span class="dot ${s.dot}"></span>${g.asset ? `설치기 ${MB(g.asset.size)} · ${esc(g.date)} 배포 · 받은 뒤 해시 검증` : "릴리스 정보를 확인하는 중"}`;
+
+  let third = sOwned
+    ? `<div class="fact-l">Steam 게임 폴더 <span class="pill ok">이 PC에 있음</span></div><div class="path"><code title="${esc(sOwned.path)}">${esc(sOwned.path)}</code><button onclick="host('open.folder',{path:${esc(JSON.stringify(sOwned.path))}})">열기</button></div>`
+    : isQuest(g) && !g.platforms.includes("pcvr")
+    ? `<div class="fact-l">설치 방법 <span class="pill blue">Quest</span></div><div class="fact-v" style="font-size:16px">USB 연결 후 설치기 실행</div><div class="fact-s">개발자 모드 · USB 디버깅 허용 필요</div>`
+    : `<div class="fact-l">게임 ${g.steamAppId ? '<span class="pill off">Steam에서 못 찾음</span>' : ""}</div><div class="fact-v" style="font-size:16px">${esc(g.store || "-")}</div><div class="fact-s">${g.steamAppId ? `<button class="link" onclick="openUrl('https://store.steampowered.com/app/${esc(g.steamAppId)}')">Steam 상점 페이지 ${ICON.ext}</button>` : "-"}</div>`;
+
+  let actions = `${sOwned ? `<button class="sec-btn" onclick="host('steam.run',{appid:'${esc(g.steamAppId)}'})">${ICON.play}게임 실행</button>` : ""}
+        <button class="sec-btn" onclick="openUrl('${esc(g.releaseUrl)}')">${ICON.gh}릴리스</button>`;
+  let fact1 = `<div class="fact-l">${s.what} <span class="pill ${s.key === "ok" || s.key === "ran" ? "ok" : s.key === "update" ? "warn" : s.key === "used" ? "blue" : "off"}">${s.label}</span></div>
+          <div class="fact-v num">${s.inst ? "v" + esc(s.inst) : "—"}</div><div class="fact-s num">최신 v${esc(g.latest || "-")} · ${esc(g.date || "GitHub")}</div>`;
+  let primaryClick = `install('${g.id}')`, primaryDisabled = busy || otherBusy;
+  if (g.mode === "engine") ({ label, cls, note, third, actions, fact1, primaryClick, primaryDisabled } = isPcEngine(g) ? pcView(g) : isFovEngine(g) ? fovView(g) : questView(g));
+  const parent = g.parentId ? byId(g.parentId) : g;
+  if (g.parentId && !g.asset && parent?.asset) {
+    // 아직 이 판의 런처용 데이터가 릴리스에 없으면 같은 릴리스의 통합 설치기로 설치
+    const run = S.busy && S.busy.id === parent.id, b = S.busy || {};
+    const pct = b.phase === "download" && b.total > 0 ? Math.floor(b.done / b.total * 100) : null;
+    label = run ? `<div class="bar" style="width:${pct != null ? Math.max(3, pct) : 100}%"></div><span class="num">${b.phase === "download" ? "받는 중" + (pct != null ? " " + pct + "%" : "") : b.phase === "running" ? "설치기 실행 중" : "준비 중"}</span>`
+      : `${ICON.down}<span>Quest판 설치기 실행</span>`;
+    cls = run ? "busy" : ""; primaryClick = `installExe('${parent.id}','${g.id}')`; primaryDisabled = !!(S.busy || S.qbusy);
+    note = run && b.phase === "running" ? `<span class="dot warn pulse"></span><b>설치기 창에서 Quest판 설치를 진행해 주세요.</b>`
+      : `<span class="dot blue"></span>이 버전은 통합 설치기 창에서 Quest판을 설치합니다. 다음 업데이트부터 런처 안에서 바로 설치돼요.`;
+    actions = `<button class="sec-btn" onclick="openUrl('${esc(g.releaseUrl)}')">${ICON.gh}릴리스</button>`;
+  }
+  const variantBar = parent?.subs?.length ? `<div class="seg variant-seg">${[parent, ...parent.subs].map(v =>
+      `<button class="${v.id === g.id ? "on" : ""}" onclick="pickVariant('${parent.id}','${v.id}')" ${S.busy || S.qbusy ? "disabled" : ""}>${esc(v.variantLabel || platLabel(v))}</button>`).join("")}</div>` : "";
+
+  const rv = relatedVideo(g);
+  const disc = (C.promos || []).find(p => p.id === "game-discount");
+  const others = ITEMS.filter(x => x.id !== g.id && isPatch(x) && !["ok", "ran"].includes(stat(x).key)).slice(0, 4);
+  const welcome = S.welcome === g.id ? `<div class="welcome">${ICON.info.replace('stroke="currentColor"', 'stroke="var(--accent)"')}
+      <p><b>제콜 통합 런처</b>예요. 이 런처 하나로 <b>${ITEMS.filter(isPatch).length}개 게임</b>의 한글패치를 설치·업데이트할 수 있어요.</p>
+      <button class="mini" onclick="S.welcome=null;go('home')">전체 목록 보기</button><button class="x ghost-btn" style="height:28px;padding:0 6px" onclick="S.welcome=null;render()">${ICON.x}</button></div>` : "";
+
+  return `<div class="${S._enter ? "enter" : ""}">
+    ${welcome}
+    <div class="hero" style="${bgImg(g.artList, g.tint)}${welcome ? ";margin-top:12px" : ""}">${glyph(g, "xl")}
+      <button class="crumb" onclick="go('home')">${ICON.back}라이브러리</button>
+      <div class="hero-in">
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">${platLabel(g)}</span>${g.store ? `<span class="tag">${esc(g.store)}</span>` : ""}${sOwned ? '<span class="tag ok">● Steam에 설치됨</span>' : ""}${isNewRelease(g) ? '<span class="tag acc">NEW</span>' : ""}</div>
+        <h1>${esc(g.name)}</h1><p class="lede">${esc(g.sub || "")}${isPatch(g) ? " 한국어 패치" : ""} · 제작 제콜</p>
+      </div>
+    </div>
+    <div class="dpage">
+      ${variantBar}
+      <div class="actionbar">
+        <button class="primary ${cls}" onclick="${primaryClick}" ${primaryDisabled ? "disabled" : ""}>${label}</button>
+        ${actions}
+      </div>
+      <div class="act-note num">${note}</div>
+      <div class="facts">
+        <div class="fact">${fact1}</div>
+        <div class="fact"><div class="fact-l">${esc(g.dep?.label || "지원")}</div><div class="fact-v num">${esc(g.dep?.value || "-")}</div><div class="fact-s">${esc(g.dep?.note || "")}</div></div>
+        <div class="fact">${third}</div>
+      </div>
+      <div class="cols">
+        <div class="panel">
+          <div class="panel-h"><h2>패치노트</h2><button class="link" onclick="openUrl('${esc(g.repoUrl)}/releases')">전체 릴리스 ${ICON.ext}</button></div>
+          <ul class="notes">${(g.noteList || []).map((n, i) => `<li class="note ${i === 0 ? "cur" : ""}">
+            <div class="note-h num"><b>v${esc(n.v)}</b><span>${esc(n.d)}</span>${s.inst && cmpV(n.v, s.inst) === 0 ? '<span class="pill off">설치됨</span>' : ""}</div>
+            <ul>${n.items.map(x => `<li>${esc(x)}</li>`).join("")}</ul></li>`).join("")}</ul>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><h2>알아둘 점</h2></div>
+          <ul class="tips">${(g.tips || ["설치 전 게임을 완전히 종료해 주세요."]).map(t => `<li>${ICON.info}<span>${t}</span></li>`).join("")}</ul>
+          ${rv ? `<button class="rvid" onclick="openUrl('https://youtu.be/${esc(rv.id)}')"><div class="vthumb" style="background-image:url('https://i.ytimg.com/vi/${esc(rv.id)}/mqdefault.jpg')"></div><span><small>${ICON.yt.replace(/16/g, "12")}관련 영상</small><b>${esc(rv.title.split("|")[0])}</b></span></button>` : ""}
+          ${isQuest(g) && disc ? `<button class="rvid disc" style="--pc:${disc.accent}" onclick="openUrl('${esc(g.questStoreUrl || disc.url)}')"><span class="promo-ic" style="background:var(--accent-soft);color:var(--accent)">${ICON.tag}</span><span><small style="color:var(--accent)">${esc(disc.tag)}</small><b>${esc(disc.title)}</b></span></button>` : ""}
+          <div class="res">
+            <button onclick="openUrl('${esc(g.repoUrl)}')"><span style="display:flex;align-items:center;gap:8px">${ICON.gh}${esc(g.repo)}</span>${ICON.ext}</button>
+            <button onclick="openUrl('${esc(g.repoUrl)}/issues')">오역 제보 · 수정 요청 ${ICON.ext}</button>
+            <button onclick="showDonate()">도움이 됐다면 후원하기 <span>→</span></button>
+          </div>
+        </div>
+      </div>
+      ${others.length ? `<div class="sub-h"><h2>이런 한글패치도 있어요</h2><button class="link" onclick="go('home')">전체 보기 →</button></div>
+        <div class="more">${others.map(miniCard).join("")}</div>` : ""}
+    </div>
+  </div>`;
+}
+const miniCard = x => `<button class="mcard" onclick="hideModal();go('${x.id}')"><div class="cover" style="${bgImg(x.artList, x.tint)}">${glyph(x, "l")}</div><div class="t"><b>${esc(x.name)}</b><small>${platLabel(x)} · v${esc(x.latest || "-")}</small></div></button>`;
+
+function render() {
+  if (!C) return;
+  renderTitle(); renderSide();
+  const g = byId(S.view);
+  if (S.view !== "home" && !g) S.view = "home";
+  S._enter = S._shown !== S.view;
+  const html = g ? renderDetail(g) : renderHome();
+  S._shown = S.view;
+  if (!S._enter && html === S._mainHtml) return;   // 바뀐 게 없으면 그대로 둠 (이미지 다시 그리기 방지)
+  S._mainHtml = html;
+  const y = $("#main").scrollTop;
+  $("#main").innerHTML = html;
+  if (!S._enter) $("#main").scrollTop = y;
+}
+
+/* 설치 진행 중: 버튼·진행 문구·상태 칸만 바꿔 끼움 (상단 이미지와 나머지는 그대로 → 깜박임 없음) */
+function patchDetail() {
+  const g = byId(S.view);
+  if (!g || S._shown !== S.view) return render();
+  S._enter = false;
+  const tpl = document.createElement("div");
+  tpl.innerHTML = renderDetail(g);
+  for (const sel of [".actionbar", ".act-note", ".facts"]) {
+    const cur = $("#main " + sel), next = tpl.querySelector(sel);
+    if (!cur || !next) return render();
+    if (cur.innerHTML === next.innerHTML) continue;
+    if (sel === ".actionbar") {
+      const cb = cur.querySelector(".primary"), nb = next.querySelector(".primary");
+      const cbar = cb?.querySelector(".bar"), nbar = nb?.querySelector(".bar");
+      if (cbar && nbar && cb.className === nb.className) {
+        cbar.style.cssText = nbar.style.cssText;
+        cb.querySelector("span").innerHTML = nb.querySelector("span").innerHTML;
+        // 나머지 버튼(다시 확인·복구 등)이 바뀐 경우에만 교체
+        const rest = el => [...el.children].slice(1).map(x => x.outerHTML).join("");
+        if (rest(cur) !== rest(next)) {
+          if (cur.children.length === next.children.length) [...cur.children].slice(1).forEach((x, i) => x.outerHTML = next.children[i + 1].outerHTML);
+          else cur.innerHTML = next.innerHTML;
+        }
+        continue;
+      }
+    }
+    morph(cur, next);
+  }
+}
+/* 자식 단위로 비교해 바뀐 노드만 교체 (점멸 점 같은 애니메이션이 다시 시작되지 않게) */
+function morph(cur, next) {
+  if (cur.childNodes.length !== next.childNodes.length) { cur.innerHTML = next.innerHTML; return; }
+  [...cur.childNodes].forEach((c, i) => {
+    const n = next.childNodes[i];
+    if (c.nodeType !== n.nodeType || (c.nodeType === 1 && c.tagName !== n.tagName)) { c.replaceWith(n.cloneNode(true)); return; }
+    if (c.nodeType === 3) { if (c.textContent !== n.textContent) c.textContent = n.textContent; return; }
+    if (c.outerHTML === n.outerHTML) return;
+    const attrs = el => [...el.attributes].map(x => x.name + '=' + x.value).join('|');
+    if (attrs(c) !== attrs(n)) { c.replaceWith(n.cloneNode(true)); return; }   // disabled·onclick 등 속성이 바뀌면 통째로
+    if (c.children.length === 0 && n.children.length === 0) { c.textContent = n.textContent; return; }
+    morph(c, n);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   동작
+   ══════════════════════════════════════════════════════════════ */
+on("install-progress", d => { if (S.busy && S.busy.id === d.id) { const phase = S.busy.phase; Object.assign(S.busy, d); if (busyHere(byId(S.view) || {})) patchDetail(); if (phase !== d.phase) renderSide(); } });
+on("open-hint", d => openHint(d.hint, true));
+on("update-progress", d => { $("#updPill").innerHTML = `<span class="tb-pill">런처 받는 중 ${d.total > 0 ? Math.floor(d.done / d.total * 100) + "%" : ""}</span>`; });
+
+async function install(id) {
+  const g = byId(id);
+  if (!g || S.busy) return;
+  if (g.mode === "engine") { if (S.view !== id) go(id); return; }
+  if (g.mode === "page" || !g.asset) { openUrl(g.releaseUrl); return; }
+  S.busy = { id, phase: "download", done: 0, total: g.asset.size || -1 };
+  if (S.view !== id) go(id); else render();
+  try {
+    await host("install.start", { id, repo: g.repo, tag: g.tag, asset: g.asset.name, url: g.asset.url, digest: g.asset.digest, mode: g.asset.mode });
+    S.busy = null;
+    await refreshStatus();
+    render();
+    afterInstall(g);
+  } catch (e) {
+    S.busy = null; render();
+    toast(e.message || "설치를 시작하지 못했습니다.", "err");
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   런처 내장 Quest 설치 (별도 설치기 창 없이 런처가 직접 처리)
+   ══════════════════════════════════════════════════════════════ */
+const qReq = (g, extra = {}) => ({ id: g.id, repo: g.repo, pkgKey: g.pkgKey || g.repo, tag: g.tag, asset: g.asset?.name, url: g.asset?.url, digest: g.asset?.digest, storage: g.install.storage, ...extra });
+let _qPoll = null;
+async function questCheck(id, serial) {
+  const g = byId(id); if (!g || S.qbusy || S.qwifi) return;
+  S.q[id] = { ...(S.q[id] || {}), checking: true }; if (S.view === id) render();
+  const seq = (S.qseq = S.qseq || {})[id] = (S.qseq[id] || 0) + 1;
+  try {
+    const st = await host("quest.state", qReq(g, serial ? { serial } : {}));
+    if (S.qseq[id] !== seq || S.qwifi || S.qbusy) return;
+    if (st && !st.busy) S.q[id] = st; else if (st?.busy) S.q[id] = { ...(S.q[id] || {}), checking: false };
+  } catch (e) { if (S.qseq[id] !== seq) return; S.q[id] = { current: "상태 확인 필요", tag: "확인 필요", tone: "warning", message: e.message }; }
+  delete S.qprog[id];
+  if (S.view === id) render();
+  // 연결 전 단계에서는 자동으로 다시 확인 (기기 파일 검사 없이 가벼움)
+  clearTimeout(_qPoll);
+  const t = S.q[id]?.tag;
+  if (["연결 필요", "인증 필요", "준비 필요", "선택 필요"].includes(t)) _qPoll = setTimeout(() => { if (S.view === id && !S.qbusy) questCheck(id); }, 4000);
+}
+on("quest-progress", d => { S.qprog[d.id] = d; if (S.view === d.id) patchDetail(); });
+
+async function questRun(id, action, terms = false) {
+  const g = byId(id); if (!g || S.qbusy) return;
+  const q = S.q[id] || {};
+  if (q.needsTerms && !terms) return showTerms(id, action);
+  clearTimeout(_qPoll);
+  S.qbusy = { id, action }; S.qprog[id] = { message: action === "install" ? "설치를 준비합니다…" : "원본 복구를 준비합니다…" }; render();
+  try {
+    S.qseq = S.qseq || {}; S.qseq[id] = (S.qseq[id] || 0) + 1;
+    const st = await host("quest.run", qReq(g, { action, termsAccepted: terms, serial: q.serial, deviceId: q.deviceId || null }));
+    S.q[id] = st || {};
+  } catch (e) { S.q[id] = { current: "상태 확인 필요", tag: "확인 필요", tone: "warning", message: e.message, failed: true }; }
+  S.qbusy = null; delete S.qprog[id];
+  await refreshStatus(); render();
+  const st = S.q[id];
+  if (st.success && action === "install") st.verifiedOnly ? toast(st.message, "ok") : afterInstall(g, true);
+  else if (st.success) toast(action === "cleanup" ? st.message : "원본 복구 완료 · 세이브 진행 상황은 유지됩니다.", "ok");
+  else if (st.failed) toast(st.message || "작업을 마치지 못했습니다.", "err");
+  else if (st.needsTerms) showTerms(id, action);
+}
+
+// ── 무선 연결 (처음 한 번 USB로 켜고, 이후 Wi-Fi로 설치) ──
+async function questWifi(id, action, address) {
+  const q = S.q[id] || {};
+  if (S.qbusy || S.qwifi) return;
+  clearTimeout(_qPoll);
+  S.qseq = S.qseq || {}; S.qseq[id] = (S.qseq[id] || 0) + 1;
+  S.qwifi = { id, action }; S.qprog[id] = { message: { enable: "무선 연결을 켜는 중… (10초 정도 걸려요)", connect: "무선으로 연결하는 중…", disconnect: "무선 연결을 끊는 중…", forget: "무선 연결을 지우는 중…" }[action] }; render();
+  let ok = false;
+  try {
+    const r = await host("quest.wifi", { action, serial: q.serial, address: address || (action === "disconnect" || action === "forget" ? (q.wireless ? q.serial : q.wifiSaved) : null) });
+    ok = true;
+    if (action === "enable") showWifiDone(id, r.address);
+    else toast(r.message, "ok");
+  } catch (e) { toast(e.message || "무선 연결에 실패했습니다.", "err"); }
+  S.qwifi = null; delete S.qprog[id];
+  await engineCheck(byId(id))(id);
+  return ok;
+}
+function showWifiDone(id, address) {
+  showModal(`<h2>무선 연결을 켰어요</h2>
+    <p>Quest(<b class="num">${esc((address || "").split(":")[0])}</b>)에 Wi-Fi로 연결했습니다. 이제 <b>USB 케이블을 분리</b>해도 런처가 무선으로 설치·복구합니다.</p>
+    <p style="font-size:12.5px;color:var(--muted)">USB보다 전송이 느려 설치에 몇 분 더 걸릴 수 있어요. 설치 중에는 Quest를 켜 둔 채 공유기 가까이에 두세요. Quest를 재부팅하면 무선 모드가 꺼지므로 그때는 USB로 한 번 다시 켜 주세요.</p>
+    <div class="mfoot"><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal();engineCheck(byId('${id}'))('${id}')">확인</button></div>`);
+}
+function showWifiHelp(id) {
+  const q = S.q[id] || {};
+  showModal(`<h2>무선으로 연결하기</h2>
+    <p>케이블 없이 Wi-Fi로 한글패치를 설치할 수 있어요. PC와 Quest가 <b>같은 공유기</b>에 연결되어 있어야 합니다.</p>
+    <p style="margin:10px 0 4px"><b>1.</b> 처음 한 번만 Quest를 USB로 연결하고 USB 디버깅을 허용합니다.<br><b>2.</b> 런처의 <b>무선으로 연결하기</b>를 누릅니다.<br><b>3.</b> 완료되면 케이블을 분리하세요. 다음부터는 Quest를 켜기만 하면 자동으로 연결됩니다.</p>
+    <p style="font-size:12.5px;color:var(--muted)">Quest를 재부팅했다면 무선 모드가 꺼지므로 USB로 한 번 다시 켜 주세요. 이미 무선 모드를 켜 두었다면(예: SideQuest) 아래에 Quest의 IP 주소를 입력해 바로 연결할 수 있어요.</p>
+    <div style="display:flex;gap:8px;margin-top:8px"><input id="wifiAddr" class="num" placeholder="예) 192.168.0.23" value="${esc((q.wifiSaved || "").split(":")[0])}" style="flex:1;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text)">
+    <button class="mini acc" style="height:36px;padding:0 16px" onclick="const v=document.getElementById('wifiAddr').value;hideModal();questWifi('${id}','connect',v)">연결</button></div>
+    <div class="mfoot">${q.wifiSaved ? `<button class="ghost-btn" onclick="hideModal();questWifi('${id}','forget')">기억한 주소 지우기</button>` : ""}<button class="ghost-btn" onclick="hideModal()">닫기</button></div>`);
+}
+
+function questOpenStorage(id) { const g = byId(id); if (g?.install?.storage) host("quest.openStorage", { storage: g.install.storage }); }
+
+function showTerms(id, action) {
+  showModal(`<h2>Quest 연결 도구 준비</h2>
+    <p>Quest에 한글패치를 넣으려면 Google의 공식 연결 도구(ADB)가 필요합니다. 처음 한 번만 Google 서버에서 받아 런처 폴더에 보관하며, 관리자 권한이나 별도 설치는 필요 없습니다. <b>‘약관에 동의하고 받기’를 누르면 Google의 Android SDK 약관에 동의하는 것입니다.</b> 런처는 ADB를 함께 배포하지 않습니다.</p>
+    <button class="dn" onclick="openUrl('https://developer.android.com/studio/terms')"><span class="dn-ic" style="background:var(--surface-3);color:var(--text)">G</span><span><b>Android SDK 약관 보기</b><span>developer.android.com/studio/terms</span></span><span class="arr">${ICON.ext}</span></button>
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal()">취소</button><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal();questRun('${id}','${action}',true)">약관에 동의하고 받기</button></div>`);
+}
+function confirmRestore(id) {
+  const g = byId(id);
+  showModal(`<h2>원본으로 복구할까요?</h2>
+    <p><b>${esc(g.name)}</b>의 게임 데이터를 이 PC에 보관한 원본으로 되돌립니다. 세이브 진행 상황은 그대로 유지되고, 언제든 다시 설치할 수 있어요.</p>
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal()">취소</button><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal();questRun('${id}','restore')">원본 복구</button></div>`);
+}
+
+const GB = n => (n / 1073741824).toFixed(1) + "GB";
+function confirmCleanup(id) {
+  const g = byId(id), q = S.q[id] || {};
+  showModal(`<h2>저장공간 정리</h2>
+    <p>원본은 이 PC에 보관하므로, Quest에 따로 남겨 둔 원본 사본과 PC의 쓰지 않는 파일을 지웁니다. <b>지우기 전에 PC 원본이 정확한지 해시로 확인</b>하며, 게임 파일과 세이브는 건드리지 않습니다.</p>
+    <div class="facts" style="grid-template-columns:1fr 1fr;margin:0 0 6px">
+      <div class="fact"><div class="fact-l">Quest</div><div class="fact-v num">${GB(q.reclaimDevice || 0)}</div><div class="fact-s">이전 방식 기기 백업</div></div>
+      <div class="fact"><div class="fact-l">PC</div><div class="fact-v num">${GB(q.reclaimPc || 0)}</div><div class="fact-s">이전 게임 버전 원본 · 임시 파일</div></div>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin:10px 0 0">${q.keptForMobile ? "Quest 단독 설치기가 사용하는 기기 원본 백업은 남겨 둡니다. " : ""}정리 후 원본 복구는 이 PC에서 진행됩니다. 다른 PC에서는 Meta 앱에서 게임을 재설치하면 원본으로 돌아갑니다.</p>
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal()">취소</button><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal();questRun('${id}','cleanup')">정리하기</button></div>`);
+}
+function questView(g) {
+  const q = S.q[g.id] || { checking: true }, prog = S.qprog[g.id], mine = S.qbusy && S.qbusy.id === g.id;
+  const tone = { good: "ok", warning: "warn", neutral: "off" }[q.tone] || "off";
+  let label, cls = "";
+  if (mine) {
+    const pct = prog?.percent;
+    cls = "busy";
+    label = `<div class="bar" style="width:${pct != null ? Math.max(3, pct) : 100}%;${pct == null ? "opacity:.45" : ""}"></div><span class="num">${{ install: "설치 진행 중", restore: "복구 진행 중", cleanup: "정리 중" }[S.qbusy.action]}${pct != null ? " · " + Math.floor(pct) + "%" : ""}</span>`;
+  } else if (S.qwifi && S.qwifi.id === g.id) { cls = "busy"; label = `<span class="num">${S.qwifi.action === "enable" || S.qwifi.action === "connect" ? "무선 연결 중…" : "처리 중…"}</span>`; }
+  else if (q.checking) { cls = "busy"; label = `<span class="num">Quest 확인 중…</span>`; }
+  else label = `${q.tag === "최신 버전" ? ICON.check : ICON.down}<span>${esc(q.installLabel || "Quest 연결 확인")}${q.tag !== "최신 버전" && g.latest && q.canInstall ? ` <small class="num">v${esc(g.latest)}</small>` : ""}</span>`;
+  if (!mine && !q.checking && q.tag === "최신 버전") cls = "soft";
+
+  const wifiBusy = S.qwifi && S.qwifi.id === g.id;
+  const msg = mine || wifiBusy ? prog?.message : (q.checking && prog?.message ? prog.message : q.message);
+  const note = mine || wifiBusy
+    ? `<span class="dot warn pulse"></span><b>${esc(msg || "")}</b><span style="margin-left:auto;color:var(--faint)">${q.wireless ? "Quest를 끄지 마세요" : "케이블을 분리하지 마세요"}</span>`
+    : `<span class="dot ${q.tone === "good" ? "" : q.tone === "warning" ? "warn" : "off"} ${q.checking ? "pulse" : ""}"></span>${esc(msg || "Quest를 USB로 연결하면 자동으로 확인합니다.")}`;
+
+  const devSel = (q.devices || []).length > 1 ? `<div class="seg" style="margin-top:6px">${q.devices.map(d => `<button class="${q.serial === d ? "on" : ""}" onclick="questCheck('${g.id}','${esc(d)}')">${esc(q.deviceLabels?.[d] || d.slice(-6))}</button>`).join("")}</div>` : "";
+  const devName = q.deviceId || q.serial || "";
+  const wifiOff = !!(S.qbusy || S.busy || S.qwifi || q.checking);
+  const wifiLink = q.serial && !q.wireless ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${wifiOff ? "disabled" : ""} onclick="questWifi('${g.id}','enable')">무선으로 연결하기 →</button>`
+    : q.serial && q.wireless ? `<button class="link" style="margin-top:6px;color:var(--muted)" ${wifiOff ? "disabled" : ""} onclick="questWifi('${g.id}','disconnect')">무선 연결 끊기</button>`
+    : !q.checking && ["연결 필요"].includes(q.tag) ? (q.wifiSaved ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${wifiOff ? "disabled" : ""} onclick="questWifi('${g.id}','connect')">무선 다시 연결 →</button> <button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">주소 입력</button>`
+      : `<button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">무선으로 연결하는 방법 →</button>`) : "";
+  const third = `<div class="fact-l">Quest 기기 <span class="pill ${q.serial ? "ok" : "off"}">${q.serial ? (q.wireless ? "무선 연결됨" : "연결됨") : esc(q.tag || "확인 중")}</span></div>
+    <div class="fact-v" style="font-size:16px">${esc(q.model || (q.serial ? "Quest" : q.current || "연결 대기"))}</div>
+    <div class="fact-s">${q.serial ? "기기 " + esc(devName.slice(-6)) + (q.wireless ? " · Wi-Fi " + esc(q.serial.split(":")[0]) : "") + (q.pcOriginal ? " · 원본은 이 PC에 보관" : "") : esc(q.note || "개발자 모드 · USB 디버깅 허용 필요")}</div>${devSel}${wifiLink}
+    ${(q.reclaimDevice || 0) + (q.reclaimPc || 0) > 256 * 1048576 && !S.qbusy && !S.qwifi ? `<button class="link" style="margin-top:6px;color:var(--accent)" onclick="confirmCleanup('${g.id}')">저장공간 ${GB((q.reclaimDevice || 0) + (q.reclaimPc || 0))} 정리하기 →</button>` : ""}`;
+  const ver = q.current && /^v/.test(q.current) ? q.current : "—";
+  const fact1 = `<div class="fact-l">한글패치 <span class="pill ${tone}">${esc(q.serial ? q.tag : "기기 확인 전")}</span></div>
+    <div class="fact-v num">${esc(q.serial ? ver : (statOne(g).inst ? "v" + statOne(g).inst : "—"))}</div>
+    <div class="fact-s num">${esc(q.serial ? (q.note || "") : `최신 v${g.latest || "-"} · ${g.date || "GitHub"}`)}</div>`;
+  const busyAny = !!(S.qbusy || S.busy || S.qwifi);
+  const actions = `
+    <button class="sec-btn" onclick="questCheck('${g.id}')" ${busyAny || q.checking ? "disabled" : ""}>${ICON.refresh.replace(/13/g, "16")}다시 확인</button>
+    <button class="sec-btn" onclick="confirmRestore('${g.id}')" ${busyAny || !q.canRestore ? 'disabled style="opacity:.45"' : ""}>원본 복구</button>
+    <button class="sec-btn" title="백업·기록 폴더 열기" style="width:54px;padding:0;justify-content:center" onclick="questOpenStorage('${g.id}')">${ICON.folder}</button>`;
+  return { label, cls, note, third, actions, fact1, primaryClick: `questRun('${g.id}','install')`, primaryDisabled: busyAny || q.checking || !q.canInstall };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   런처 내장 PC VR 설치 (게임 폴더가 Program Files 아래면 Windows 권한 확인만 한 번)
+   ══════════════════════════════════════════════════════════════ */
+const isPcEngine = g => g.mode === "engine" && /^pc-/.test(g.install?.engine || "");
+const isFovEngine = g => g?.mode === "engine" && g.install?.engine === "quest-fovlab";
+const engineCheck = g => isPcEngine(g) ? pcCheck : isFovEngine(g) ? fovCheck : questCheck;
+
+/* ── Meta VR Glasses FoV Tester: 앱 설치·업데이트 / 다른 게임 적용 / 앱 실행 ── */
+const fReq = (g, extra = {}) => ({ id: g.id, repo: g.repo, tag: g.tag, asset: g.asset?.name, url: g.asset?.url, digest: g.asset?.digest, ...extra });
+async function fovCheck(id, serial) {
+  const g = byId(id); if (!g || S.qbusy || S.qwifi) return;
+  S.q[id] = { ...(S.q[id] || {}), checking: true }; if (S.view === id) render();
+  const seq = (S.qseq = S.qseq || {})[id] = (S.qseq[id] || 0) + 1;
+  try {
+    const st = await host("quest.fov.state", fReq(g, serial ? { serial } : {}));
+    if (S.qseq[id] !== seq || S.qwifi || S.qbusy) return;
+    if (st && !st.busy) S.q[id] = st; else if (st?.busy) S.q[id] = { ...(S.q[id] || {}), checking: false };
+  } catch (e) { if (S.qseq[id] !== seq) return; S.q[id] = { current: "상태 확인 필요", tag: "확인 필요", tone: "warning", message: e.message }; }
+  delete S.qprog[id];
+  if (S.view === id) render();
+  clearTimeout(_qPoll);
+  if (["연결 필요", "인증 필요", "준비 필요", "선택 필요"].includes(S.q[id]?.tag)) _qPoll = setTimeout(() => { if (S.view === id && !S.qbusy) fovCheck(id); }, 4000);
+}
+async function fovRun(id, action, terms = false) {
+  const g = byId(id); if (!g || S.qbusy || S.qwifi) return;
+  const q = S.q[id] || {};
+  if (q.needsTerms && !terms) return showFovTerms(id, action);
+  if (action === "enable" && !terms && !store("fov-cli-terms")) return showFovCli(id);
+  clearTimeout(_qPoll);
+  S.qseq = S.qseq || {}; S.qseq[id] = (S.qseq[id] || 0) + 1;
+  S.qbusy = { id, action }; S.qprog[id] = { message: { install: "설치를 준비합니다…", enable: "다른 게임 적용을 준비합니다…", launch: "앱을 실행합니다…" }[action] }; render();
+  let st;
+  try { st = await host("quest.fov.run", fReq(g, { action, termsAccepted: terms, serial: q.serial, deviceId: q.deviceId || null })) || {}; }
+  catch (e) { st = { current: "상태 확인 필요", tag: "확인 필요", tone: "warning", message: e.message, failed: true }; }
+  S.q[id] = st; S.qbusy = null; delete S.qprog[id];
+  await refreshStatus(); render();
+  if (st.success) toast(st.message, "ok");
+  else if (st.failed) toast(st.message || "작업을 마치지 못했습니다.", "err");
+  else if (st.needsTerms) showFovTerms(id, action);
+  else if (st.message) toast(st.message, "err");
+}
+function showFovTerms(id, action) {
+  showModal(`<h2>Quest 연결 도구 준비</h2>
+    <p>Quest에 앱을 설치하려면 Google의 공식 연결 도구(ADB)가 필요합니다. 처음 한 번만 Google 서버에서 받아 런처 폴더에 보관하며, 관리자 권한이나 별도 설치는 필요 없습니다. <b>‘약관에 동의하고 받기’를 누르면 Google의 Android SDK 약관에 동의하는 것입니다.</b> 런처는 ADB를 함께 배포하지 않습니다.</p>
+    <button class="dn" onclick="openUrl('https://developer.android.com/studio/terms')"><span class="dn-ic" style="background:var(--surface-3);color:var(--text)">G</span><span><b>Android SDK 약관 보기</b><span>developer.android.com/studio/terms</span></span><span class="arr">${ICON.ext}</span></button>
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal()">취소</button><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal();fovRun('${id}','${action}',true)">약관에 동의하고 받기</button></div>`);
+}
+function showFovCli(id) {
+  showModal(`<h2>다른 게임에 적용 켜기</h2>
+    <p>다른 게임에서도 글래스 시야를 쓰려면, 처음 한 번 <b>Meta 공식 도구(Meta VR CLI)</b>를 Meta 서버에서 받아 기기 지원 여부를 확인합니다. 받은 파일은 Meta가 알려 주는 해시로 검증한 뒤에만 실행합니다.</p>
+    <button class="dn" onclick="openUrl('https://developers.meta.com/vr/licenses/')"><span class="dn-ic" style="background:var(--surface-3);color:var(--text)">M</span><span><b>Meta 개발 도구 약관 보기</b><span>developers.meta.com/vr/licenses</span></span><span class="arr">${ICON.ext}</span></button>
+    <p style="font-size:12.5px;color:var(--muted)">확인하는 동안 바뀐 시야 값은 바로 원래대로 되돌립니다. 켜고 나면 PC 연결을 끊어도 되며, Quest를 재부팅하면 이 버튼으로 다시 켜야 합니다. <b>‘약관에 동의하고 계속’을 누르면 Meta 약관에 동의하는 것입니다.</b> 런처는 이 도구를 함께 배포하지 않습니다.</p>
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal()">취소</button><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal();store('fov-cli-terms',1);fovRun('${id}','enable')">약관에 동의하고 계속</button></div>`);
+}
+function fovView(g) {
+  const q = S.q[g.id] || { checking: true }, prog = S.qprog[g.id], mine = S.qbusy && S.qbusy.id === g.id;
+  const wifiBusy = S.qwifi && S.qwifi.id === g.id;
+  const tone = { good: "ok", warning: "warn", neutral: "off" }[q.tone] || "off";
+  let label, cls = "";
+  if (mine) {
+    const pct = prog?.percent; cls = "busy";
+    label = `<div class="bar" style="width:${pct != null ? Math.max(3, pct) : 100}%;${pct == null ? "opacity:.45" : ""}"></div><span class="num">${{ install: "설치 진행 중", enable: "적용 진행 중", launch: "실행 중" }[S.qbusy.action]}${pct != null ? " · " + Math.floor(pct) + "%" : ""}</span>`;
+  } else if (wifiBusy) { cls = "busy"; label = `<span class="num">무선 연결 중…</span>`; }
+  else if (q.checking) { cls = "busy"; label = `<span class="num">Quest 확인 중…</span>`; }
+  else label = `${q.action === "launch" ? ICON.play : ICON.down}<span>${esc(q.installLabel || "Quest 연결 확인")}${q.action === "install" && g.latest && q.canInstall && !q.needsTerms ? ` <small class="num">v${esc(g.latest)}</small>` : ""}</span>`;
+  if (!mine && !wifiBusy && !q.checking && q.action === "launch") cls = "soft";
+  const msg = mine || wifiBusy ? prog?.message : (q.checking && prog?.message ? prog.message : q.message);
+  const note = mine || wifiBusy
+    ? `<span class="dot warn pulse"></span><b>${esc(msg || "")}</b><span style="margin-left:auto;color:var(--faint)">${q.wireless ? "Quest를 끄지 마세요" : "케이블을 분리하지 마세요"}</span>`
+    : `<span class="dot ${q.tone === "good" ? "" : q.tone === "warning" ? "warn" : "off"} ${q.checking ? "pulse" : ""}"></span>${esc(msg || "Quest를 USB 또는 무선 디버깅으로 연결하면 자동으로 확인합니다.")}`;
+  const devSel = (q.devices || []).length > 1 ? `<div class="seg" style="margin-top:6px">${q.devices.map(d => `<button class="${q.serial === d ? "on" : ""}" onclick="fovCheck('${g.id}','${esc(d)}')">${esc(q.deviceLabels?.[d] || d.slice(-6))}</button>`).join("")}</div>` : "";
+  const devName = q.deviceId || q.serial || "";
+  const off = !!(S.qbusy || S.busy || S.qwifi || q.checking);
+  const wifiLink = q.serial && !q.wireless ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${off ? "disabled" : ""} onclick="questWifi('${g.id}','enable')">무선으로 연결하기 →</button>`
+    : q.serial && q.wireless ? `<button class="link" style="margin-top:6px;color:var(--muted)" ${off ? "disabled" : ""} onclick="questWifi('${g.id}','disconnect')">무선 연결 끊기</button>`
+    : !q.checking && q.tag === "연결 필요" ? (q.wifiSaved ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${off ? "disabled" : ""} onclick="questWifi('${g.id}','connect')">무선 다시 연결 →</button> <button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">주소 입력</button>`
+      : `<button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">무선으로 연결하는 방법 →</button>`) : "";
+  const third = `<div class="fact-l">Quest 기기 <span class="pill ${q.serial ? "ok" : "off"}">${q.serial ? (q.wireless ? "무선 연결됨" : "연결됨") : esc(q.tag || "확인 중")}</span></div>
+    <div class="fact-v" style="font-size:16px">${esc(q.model || (q.serial ? "Quest" : q.current || "연결 대기"))}</div>
+    <div class="fact-s">${q.serial ? "기기 " + esc(devName.slice(-6)) + (q.wireless ? " · Wi-Fi " + esc(q.serial.split(":")[0]) : "") : esc(q.note || "개발자 모드 · USB 디버깅 허용 필요")}</div>${devSel}${wifiLink}`;
+  const ver = q.appVersion ? "v" + q.appVersion : "—";
+  const fact1 = `<div class="fact-l">앱 <span class="pill ${tone}">${esc(q.serial ? q.tag : "기기 확인 전")}</span></div>
+    <div class="fact-v num">${esc(q.serial ? ver : (statOne(g).inst ? "v" + statOne(g).inst : "—"))}</div>
+    <div class="fact-s">${q.serial && q.appVersion ? (q.otherGames ? `다른 게임 적용: <b style="color:${q.helperStale ? "var(--accent)" : q.helperRunning ? "var(--ok)" : "var(--muted)"}">${q.helperStale ? "예전 버전으로 켜짐" : q.helperRunning ? "켜짐" : "꺼짐"}</b>` : "앱 안 미리보기만 지원") : `최신 v${esc(g.latest || "-")} · ${esc(g.date || "GitHub")}`}</div>`;
+  const busyAny = !!(S.qbusy || S.busy || S.qwifi);
+  const actions = `
+    ${q.appVersion && q.action !== "launch" ? `<button class="sec-btn" onclick="fovRun('${g.id}','launch')" ${busyAny ? "disabled" : ""}>${ICON.play}앱 실행</button>` : ""}
+    ${q.appVersion && q.otherGames && q.action === "launch" ? `<button class="sec-btn" onclick="fovRun('${g.id}','enable')" ${busyAny ? "disabled" : ""}>다른 게임 적용 다시 켜기</button>` : ""}
+    <button class="sec-btn" onclick="fovCheck('${g.id}')" ${busyAny || q.checking ? "disabled" : ""}>${ICON.refresh.replace(/13/g, "16")}다시 확인</button>
+    <button class="sec-btn" onclick="openUrl(byId('${g.id}').releaseUrl)">${ICON.gh}릴리스</button>`;
+  return { label, cls, note, third, actions, fact1, primaryClick: `fovRun('${g.id}','${q.action || "install"}')`, primaryDisabled: busyAny || q.checking || !q.canInstall };
+}
+const pReq = (g, extra = {}) => ({ id: g.id, engine: g.install.engine, repo: g.repo, tag: g.tag, asset: g.asset?.name, url: g.asset?.url, digest: g.asset?.digest, size: g.asset?.size || null, appid: g.steamAppId || null, stateDir: g.stateDir || null, ...extra });
+async function pcCheck(id) {
+  const g = byId(id); if (!g || S.qbusy) return;
+  S.q[id] = { ...(S.q[id] || {}), checking: true }; if (S.view === id) render();
+  try { S.q[id] = await host("pc.state", pReq(g)) || {}; }
+  catch (e) { S.q[id] = { current: "상태 확인 필요", tag: "확인 필요", tone: "warning", message: e.message }; }
+  delete S.qprog[id];
+  if (S.view === id) render();
+}
+on("pc-progress", d => { S.qprog[d.id] = d; if (S.view === d.id) patchDetail(); });
+
+async function pcRun(id, action) {
+  const g = byId(id); if (!g || S.qbusy || S.busy) return;
+  S.qbusy = { id, action }; S.qprog[id] = { message: action === "install" ? "설치를 준비합니다…" : "원본 복구를 준비합니다…" }; render();
+  let st;
+  try { st = await host("pc.run", pReq(g, { action })) || {}; }
+  catch (e) { st = { current: "상태 확인 필요", tag: "확인 필요", tone: "warning", message: e.message, failed: true }; }
+  S.q[id] = st; S.qbusy = null; delete S.qprog[id];
+  await refreshStatus(); render();
+  if (st.success && action === "install") /이미|검증을 마쳤/.test(st.message || "") ? toast(st.message, "ok") : afterInstall(g, st.message || true);
+  else if (st.success) toast(st.message || "원본 복구 완료", "ok");
+  else if (st.failed) toast(st.message || "작업을 마치지 못했습니다.", "err");
+}
+function pcConfirmRestore(id) {
+  const g = byId(id);
+  showModal(`<h2>원본으로 복구할까요?</h2>
+    <p><b>${esc(g.name)}</b>의 한글패치를 제거하고 게임 파일을 원본으로 되돌립니다. 세이브와 설정은 그대로 유지되고, 언제든 다시 설치할 수 있어요.</p>
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal()">취소</button><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal();pcRun('${id}','restore')">원본 복구</button></div>`);
+}
+/* 같은 릴리스의 통합 설치기를 그대로 실행 (예: A Fisherman's Tale Quest판) */
+async function installExe(id, viewId) {
+  const g = byId(id);
+  if (!g || !g.asset || S.busy || S.qbusy) return;
+  if (!/^sha256:[a-f0-9]{64}$/.test(g.asset.digest || "")) return toast("GitHub 해시 정보가 없어 설치기를 실행하지 않았습니다. 잠시 후 다시 시도해 주세요.", "err");
+  S.busy = { id, phase: "download", done: 0, total: g.asset.size || -1, viewId: viewId || id }; render();
+  try {
+    await host("install.start", { id, repo: g.repo, tag: g.tag, asset: g.asset.name, url: g.asset.url, digest: g.asset.digest, mode: "exe" });
+    S.busy = null; await refreshStatus(); render();
+    // 하위 판(Quest판) 화면에서 연 설치기는 상위 판(Steam) 설치 기록으로 완료를 판단하지 않음
+    if (viewId && viewId !== id) toast("통합 설치기를 닫았어요. 설치 결과는 설치기 창의 안내를 확인해 주세요.", "ok"); else afterInstall(g);
+  } catch (e) { S.busy = null; render(); toast(e.message || "설치기를 실행하지 못했습니다.", "err"); }
+}
+function pcView(g) {
+  const q = S.q[g.id] || { checking: true }, prog = S.qprog[g.id], mine = S.qbusy && S.qbusy.id === g.id;
+  const exeBusy = S.busy && S.busy.id === g.id;
+  const tone = { good: "ok", warning: "warn", neutral: "off" }[q.tone] || "off";
+  let label, cls = "";
+  if (mine) {
+    const pct = prog?.percent; cls = "busy";
+    label = `<div class="bar" style="width:${pct != null ? Math.max(3, pct) : 100}%;${pct == null ? "opacity:.45" : ""}"></div><span class="num">${S.qbusy.action === "install" ? "설치 진행 중" : "복구 진행 중"}${pct != null ? " · " + Math.floor(pct) + "%" : ""}</span>`;
+  } else if (exeBusy) { cls = "busy"; label = `<span class="num">Quest판 설치기 실행 중</span>`; }
+  else if (q.checking) { cls = "busy"; label = `<span class="num">게임 파일 확인 중…</span>`; }
+  else label = `${q.tag === "최신 버전" ? ICON.check : ICON.down}<span>${esc(q.installLabel || "다시 확인")}${q.tag !== "최신 버전" && g.latest && q.canInstall ? ` <small class="num">v${esc(g.latest)}</small>` : ""}</span>`;
+  if (!mine && !exeBusy && !q.checking && q.tag === "최신 버전") cls = "soft";
+
+  const msg = mine ? prog?.message : (q.checking && prog?.message ? prog.message : q.message);
+  const note = mine
+    ? `<span class="dot warn pulse"></span><b>${esc(msg || "")}</b><span style="margin-left:auto;color:var(--faint)">게임을 실행하지 마세요</span>`
+    : exeBusy ? `<span class="dot warn pulse"></span><b>설치기 창에서 Quest판 설치를 진행해 주세요.</b>`
+    : `<span class="dot ${q.tone === "good" ? "" : q.tone === "warning" ? "warn" : "off"} ${q.checking ? "pulse" : ""}"></span>${esc(msg || "게임 파일을 확인하는 중입니다.")}`;
+  const root = q.gameRoot;
+  const third = root
+    ? `<div class="fact-l">게임 폴더 <span class="pill ok">이 PC에 있음</span></div><div class="path"><code title="${esc(root)}">${esc(root)}</code><button onclick="host('pc.openFolder',{path:${esc(JSON.stringify(root))}})">열기</button></div>`
+    : `<div class="fact-l">게임 <span class="pill off">${q.checking ? "확인 중" : "못 찾음"}</span></div><div class="fact-v" style="font-size:16px">${esc(g.store || "-")}</div><div class="fact-s">${g.steamAppId ? `<button class="link" onclick="openUrl('https://store.steampowered.com/app/${esc(g.steamAppId)}')">Steam 상점 페이지 ${ICON.ext}</button>` : "-"}</div>`;
+  const ver = q.current && /^v/.test(q.current) ? q.current : "—";
+  const fact1 = `<div class="fact-l">한글패치 <span class="pill ${tone}">${esc(q.checking ? "확인 중" : q.tag || "-")}</span></div>
+    <div class="fact-v num">${esc(q.packageReady === false && statOne(g).inst ? "v" + statOne(g).inst : ver)}</div>
+    <div class="fact-s num">최신 v${esc(g.latest || "-")} · ${esc(g.date || "GitHub")}</div>`;
+  const busyAny = !!(S.qbusy || S.busy);
+  const isTf2 = g.install.engine === "pc-tf2vr";
+  const run = root ? (isTf2
+      ? `<button class="sec-btn" onclick="host('pc.launch',{appid:'${esc(g.steamAppId || "")}'}).catch(e=>toast(e.message,'err'))" ${busyAny ? "disabled" : ""}>${ICON.play}VR 게임 실행</button>`
+      : g.steamAppId ? `<button class="sec-btn" onclick="host('steam.run',{appid:'${esc(g.steamAppId)}'})" ${busyAny ? "disabled" : ""}>${ICON.play}게임 실행</button>` : "") : "";
+  const actions = `${run}
+    <button class="sec-btn" onclick="pcCheck('${g.id}')" ${busyAny || q.checking ? "disabled" : ""}>${ICON.refresh.replace(/13/g, "16")}다시 확인</button>
+    <button class="sec-btn" onclick="pcConfirmRestore('${g.id}')" ${busyAny || !q.canRestore ? 'disabled style="opacity:.45"' : ""}>원본 복구</button>
+    ${g.install.questFallback && !g.subs?.length ? `<button class="sec-btn" title="Quest판은 기존 통합 설치기로 설치합니다" onclick="installExe('${g.id}')" ${busyAny ? "disabled" : ""}>Quest판 설치기</button>` : ""}`;
+  return { label, cls, note, third, actions, fact1, primaryClick: `pcRun('${g.id}','install')`, primaryDisabled: busyAny || q.checking || !q.canInstall };
+}
+
+/* 설치기가 닫힌 순간 = 다른 패치·혜택을 보여주기 좋은 순간 */
+function afterInstall(g, engineDone) {
+  const s = stat(g);
+  const others = ITEMS.filter(x => x.id !== g.id && isPatch(x) && !["ok", "ran"].includes(stat(x).key))
+    .sort((a, b) => (!!steamOf(b) - !!steamOf(a)) || (b.date || "").localeCompare(a.date || "")).slice(0, 3);
+  const p = (C.promos || [])[0];
+  showModal(`
+    <div class="done-ic">${ICON.check.replace(/15/g, "24")}</div>
+    <h2>${engineDone ? esc(g.name) + " 한글패치 설치 완료" : esc(g.name) + " 설치기가 닫혔어요"}</h2>
+    <p>${engineDone ? `<b style="color:var(--ok)">${isPcEngine(g) ? "게임 파일이 검증된 한글판과 일치합니다." : "Quest의 게임 파일이 검증된 한글판과 일치합니다."}</b> ${esc(engineDone === true ? "" : engineDone)} 게임을 실행해 확인해 보세요. ` : s.key === "ok" ? `<b style="color:var(--ok)">v${esc(s.inst)} 설치가 확인됐습니다.</b> ` : "설치를 마쳤다면 게임을 실행해 한글이 나오는지 확인해 주세요. "}${engineDone ? "문제가 있으면 이 화면에서 언제든 원본 복구를 할 수 있어요." : "문제가 있으면 설치기를 다시 열어 제거·원본 복구를 할 수 있어요."}</p>
+    ${others.length ? `<div class="eyebrow" style="margin:4px 0 10px">다른 게임도 한글로 즐겨 보세요</div><div class="more" style="grid-template-columns:repeat(3,minmax(0,1fr))">${others.map(miniCard).join("")}</div>` : ""}
+    ${p ? `<button class="dn" style="margin-top:14px" onclick="openUrl('${esc(p.url)}')"><span class="dn-ic" style="background:var(--blue-soft);color:${p.accent}">${ICON.gift}</span><span><b>${esc(p.title)}</b><span>${esc(p.body)}</span></span><span class="arr">→</span></button>` : ""}
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal();showDonate()">후원하기</button><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal()">확인</button></div>`, true);
+}
+
+/* 오픈소스 고지: 실행 파일 안에 함께 들어 있는 licenses 폴더의 원문을 보여 줌 */
+const NOTICE_FILES = [
+  ["THIRD_PARTY_NOTICES.txt", "제3자 고지 (요약)"], ["ZECOLE-Launcher-LICENSE.txt", "ZECOLE 런처 (MIT)"],
+  ["WebView2-LICENSE.txt", "WebView2 SDK"], ["WebView2-NOTICE.txt", "WebView2 고지"],
+  ["SharpZipLib-LICENSE.txt", "SharpZipLib"], ["zlib-LICENSE.txt", "zlib"], ["bsdiff-LICENSE.txt", "bsdiff"], ["Fonts-OFL.txt", "한글패치 글꼴 (OFL)"],
+];
+async function showNotices(i = 0) {
+  let text;
+  try { text = await (await fetch("licenses/" + NOTICE_FILES[i][0], { cache: "no-store" })).text(); }
+  catch { text = "고지 파일을 읽지 못했습니다."; }
+  showModal(`<h2>오픈소스 고지</h2>
+    <div class="seg" style="flex-wrap:wrap;margin:0 0 10px">${NOTICE_FILES.map((f, k) => `<button class="${k === i ? "on" : ""}" onclick="showNotices(${k})">${esc(f[1])}</button>`).join("")}</div>
+    <pre style="max-height:46vh;overflow:auto;white-space:pre-wrap;font-size:11.5px;line-height:1.55;background:var(--surface-2);border-radius:8px;padding:12px;margin:0">${esc(text)}</pre>
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal()">닫기</button></div>`);
+}
+
+function showDonate() {
+  const d = C.links.donate || {};
+  showModal(`<h2>한글패치 제작 후원</h2>
+    <p>모든 한글패치는 무료입니다. 후원은 번역 검수와 새 게임 작업 시간에 그대로 쓰입니다. 금액과 상관없이 큰 힘이 됩니다.</p>
+    ${d.membership ? `<button class="dn" onclick="openUrl('${esc(d.membership)}')"><span class="dn-ic" style="background:#3a1715;color:var(--yt)">▶</span><span><b>유튜브 채널 멤버십</b><span>매월 정기 후원 · 멤버 전용 혜택</span></span><span class="arr">→</span></button>` : ""}
+    ${/* 슈퍼 땡스: 결제 창으로 바로 가는 링크가 없어 영상으로 안내. links.donate.superThanks 에 영상 주소를 넣으면 버튼이 됨 */ ""}
+    ${d.superThanks
+      ? `<button class="dn" onclick="openUrl(C.links.donate.superThanks)"><span class="dn-ic" style="background:#3a1715;color:var(--yt)">♥</span><span><b>슈퍼 땡스</b><span>영상 아래 ‘Thanks(감사)’ 버튼으로 한 번씩 후원</span></span><span class="arr">→</span></button>`
+      : `<div class="dn" style="cursor:default"><span class="dn-ic" style="background:#3a1715;color:var(--yt)">♥</span><span><b>슈퍼 땡스</b><span>제콜 유튜브 영상 아래 ‘Thanks(감사)’ 버튼으로 한 번씩 후원할 수 있어요.</span></span></div>`}
+    <div class="mfoot"><button class="ghost-btn" onclick="hideModal()">닫기</button></div>`);
+}
+
+async function closeApp() {
+  if (S.busy || S.qbusy) { toast("설치가 끝난 뒤 닫을 수 있어요.", "err"); return; }
+  await host("win.close");
+}
+
+function openHint(hint, force) {
+  if (!hint) return;
+  const h = norm(hint);
+  const g = ITEMS.find(x => h === norm(x.id) || h === norm(x.repo) || h === norm(x.name))
+    || ITEMS.find(x => [x.id, x.name, x.repo].some(k => { const n = norm(k); return n.length >= 4 && (h.includes(n) || n.includes(h)); }));
+  if (!g) return;
+  S.welcome = store("welcomed") && !force ? null : g.id;
+  store("welcomed", true);
+  go(g.id);
+}
+
+async function checkLauncherUpdate() {
+  const r = await getJson(`https://api.github.com/repos/${C.github}/${C.launcherRepo}/releases/latest`, 1800);
+  const rel = r.data; if (!rel || !rel.tag_name) return;
+  const v = cleanV(rel.tag_name);
+  if (cmpV(v, S.info.version || "0") <= 0) return;
+  const a = (rel.assets || []).find(x => /^ZECOLE_Launcher.*\.exe$/i.test(x.name));
+  if (a) { S.update = { version: v, url: a.browser_download_url, digest: a.digest }; renderTitle(); }
+}
+async function applyUpdate() {
+  if (S.busy) return toast("설치가 끝난 뒤 업데이트할 수 있어요.", "err");
+  try { await host("update.apply", { url: S.update.url, digest: S.update.digest }); }
+  catch (e) { toast(e.message, "err"); renderTitle(); }
+}
+
+/* 제목 줄 끌어서 창 이동 */
+$("#titlebar").addEventListener("mousedown", e => { if (e.button === 0 && !e.target.closest("button")) host("win.drag"); });
+addEventListener("keydown", e => { if (e.key === "Escape") { if ($("#scrim").classList.contains("on")) hideModal(); else if (S.view !== "home") go("home"); } });
+
+/* ══════════════════════════════════════════════════════════════
+   시작
+   ══════════════════════════════════════════════════════════════ */
+(async function boot() {
+  S.info = await host("app.info") || {};
+  renderTitle();
+  const steamP = host("steam.apps").then(r => STEAM = r || {}).catch(() => { });
+  try { await loadCatalog(); } catch (e) { console.error(e); S.sync = "offline"; }
+  await Promise.all([steamP, refreshStatus()]);
+  render();
+  if (S.info.startHint && !S.hintDone) { S.hintDone = true; openHint(S.info.startHint); }
+  store("promoIdx", (store("promoIdx") || 0) + 1);
+  host("youtube.feed", { channelId: C.youtube.channelId }).then(v => { VIDEOS = v || []; render(); }).catch(() => { });
+  checkLauncherUpdate();
+  setInterval(async () => { if (!S.busy) { await refreshStatus(); render(); } }, 60000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+LIBRARY zecole_zlib
+EXPORTS
+  zecole_compress9
+  zlibVersion

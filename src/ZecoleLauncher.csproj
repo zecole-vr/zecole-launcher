@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ZECOLE 통합 런처
+    - .NET Framework 4.8 (Windows 10/11 기본 탑재) → 별도 런타임 설치 없이 실행
+    - WebView2(Edge) 로 ui/ 폴더의 화면을 띄움
+    - WebView2 DLL 과 화면 파일은 EXE 안에 넣어 단일 파일로 배포
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>ZECOLE_Launcher</AssemblyName>
+    <RootNamespace>Zecole.Launcher</RootNamespace>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.0.0</Version>
+    <Product>ZECOLE 통합 런처</Product>
+    <Company>ZECOLE</Company>
+    <Copyright>ZECOLE</Copyright>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>ko</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" GeneratePathProperty="true" />
+    <!-- bzip2 해제 (BSDIFF40 차분 패치용). net45 빌드를 EXE 리소스로 포함 -->
+    <PackageReference Include="SharpZipLib" Version="1.3.3" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+
+  <!-- 화면 파일을 EXE 리소스로 포함 -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\ui\**\*.*">
+      <LogicalName>ui/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <!-- 공식 zlib 1.2.13 압축 모듈 (native/zlib/build.cmd 로 빌드) -->
+    <EmbeddedResource Include="..\native\zlib\zecole_zlib.dll" LogicalName="lib/zecole_zlib.dll" />
+  </ItemGroup>
+
+  <!-- WebView2 DLL 을 EXE 리소스로 포함 (단일 파일 배포) -->
+  <Target Name="EmbedWebView2" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <EmbeddedResource Include="$(PkgMicrosoft_Web_WebView2)\lib\net462\Microsoft.Web.WebView2.Core.dll" LogicalName="lib/Microsoft.Web.WebView2.Core.dll" />
+      <EmbeddedResource Include="$(PkgMicrosoft_Web_WebView2)\lib\net462\Microsoft.Web.WebView2.WinForms.dll" LogicalName="lib/Microsoft.Web.WebView2.WinForms.dll" />
+      <EmbeddedResource Include="$(PkgMicrosoft_Web_WebView2)\runtimes\win-x64\native\WebView2Loader.dll" LogicalName="lib/WebView2Loader.dll" />
+      <EmbeddedResource Include="$(PkgSharpZipLib)\lib\net45\ICSharpCode.SharpZipLib.dll" LogicalName="lib/ICSharpCode.SharpZipLib.dll" />
+    </ItemGroup>
+  </Target>
+
+  <!-- WebView2 DLL 을 출력 폴더에 따로 복사하지 않음 (리소스에서 로드) -->
+  <Target Name="StripWebView2Copies" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.Web.WebView2')) Or $([System.String]::Copy('%(Filename)').StartsWith('ICSharpCode'))" />
+    </ItemGroup>
+  </Target>
+  <Target Name="StripNativeLoader" AfterTargets="Build">
+    <Delete Files="$(OutDir)WebView2Loader.dll" />
+    <RemoveDir Directories="$(OutDir)runtimes" />
+  </Target>
+
+</Project>

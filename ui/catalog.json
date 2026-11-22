@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "github": "zecole-vr",
+  "launcherRepo": "zecole-launcher",
+  "hiddenRepos": ["zecole-launcher", "zecole-vr", ".github"],
+  "feedUrls": [
+    "https://raw.githubusercontent.com/zecole-vr/zecole-launcher/main/feed/feed.json",
+    "https://zecole.store/launcher/feed.json"
+  ],
+  "youtube": {
+    "handle": "@zecole",
+    "channelId": "UCvnvL2sdO4-8wjLhNO4JOKQ",
+    "url": "https://www.youtube.com/@zecole"
+  },
+  "links": {
+    "web": "https://zecole.store",
+    "request": "https://zecole.store",
+    "github": "https://github.com/zecole-vr",
+    "donate": {
+      "membership": "https://www.youtube.com/@zecole/join"
+    }
+  },
+  "promos": [
+    {
+      "id": "quest-referral",
+      "tag": "퀘스트 구매 혜택",
+      "title": "메타 퀘스트 구매하고 3.6만 원 크레딧 받기",
+      "body": "제콜 추천 링크로 퀘스트를 구매·등록하면 게임 구매에 쓸 수 있는 크레딧이 지급됩니다.",
+      "cta": "추천 링크로 받기",
+      "url": "https://zecole.store",
+      "accent": "#6fa8ff"
+    },
+    {
+      "id": "game-discount",
+      "tag": "게임 할인",
+      "title": "퀘스트 게임 10% 할인받고 구매하기",
+      "body": "제콜 추천 링크로 게임을 사면 10% 할인됩니다. 한글패치 게임도 할인받고 시작하세요.",
+      "cta": "할인 링크 보기",
+      "url": "https://zecole.store",
+      "accent": "#e6a96e"
+    }
+  ],
+  "notice": null,
+  "items": {
+    "H3VR2-Quest-KoreanPatch": {
+      "id": "h3vr2", "kind": "patch", "order": 10,
+      "name": "H3VR2", "sub": "Hot Dogs, Horseshoes & Hand Grenades 2",
+      "platforms": ["quest"], "store": "Meta Quest Store",
+      "video": "67k4sW1YcB0",
+      "art": "img/h3vr2-keyart.jpg",
+      "install": { "mode": "engine", "engine": "quest-recipe-v2", "storage": "H3VR2/Quest", "asset": "^H3VR2_Quest_(Setup_v[\\d.]+\\.exe|v[\\d.]+\\.zpkg)$" },
+      "stateDir": "H3VR2",
+      "detect": [{ "path": "H3VR2/Quest/*/*/installation.json", "version": "patch_version", "state": "state", "ok": "installed" }],
+      "dep": { "label": "게임 버전", "value": "20261119E", "note": "빌드 200534 · Quest 3 / 3S" },
+      "notes": {
+        "0.5.3": ["설치기 개선: PC 원본 백업만 있어도 설치·복구", "무선 ADB 연결에서도 같은 설치 기록 사용", "중단 복구 안정성 강화"],
+        "0.5.2": ["손목시계 작업 지시 상세정보(ⓘ) 한글 표시", "SpawnR 보관함 저장·불러오기 창 번역", "상인 가격 $·RECYCLR 숫자 5 깨짐 수정"],
+        "0.5.1": ["게임 핫픽스(20261119E / 200534) 대응", "0.5.0 번역 그대로 이식 · 핫픽스 밸런스 변경 반영", "‘위협 평가 2’ 작업 지시 설명 새 번역"],
+        "0.5.0": ["게임 업데이트(20261119D / 200533) 대응", "새 설정 메뉴 · 날씨 · SpawnR 용기 비우기 번역", "새 아이템 · 포스터 · VendOS 버튼 번역"],
+        "0.4.0": ["게임 업데이트(20261115D / 200522) 대응", "일시정지 확인창 · SpawnR 아이템 제원 번역", "임무 목록 조건 문구와 보상 표기 번역"],
+        "0.3.0": ["Quest 3S 지원", "상점·재활용기 아이템 이름 621개 번역", "상인 구출 대사 · 업그레이드 확인창 번역"]
+      },
+      "tips": [
+        "게임을 업데이트했다면 <b>최신 설치기로 다시 설치</b>해 주세요. 게임 업데이트가 한글패치를 원본으로 되돌립니다.",
+        "Quest 개발자 모드를 켜고 USB로 연결한 뒤, 헤드셋에서 <b>USB 디버깅을 허용</b>하세요.",
+        "설치 전 게임을 완전히 종료하세요. 원본 APK는 그대로 두고, 원본 게임 데이터는 이 PC에 보관합니다."
+      ]
+    },
+    "PAYDAY-KoreanPatch-Quest": {
+      "id": "payday", "kind": "patch", "order": 20,
+      "name": "PAYDAY: Aces High", "sub": "페이데이: 에이스 하이",
+      "platforms": ["quest"], "store": "Meta Quest Store · Horizon+",
+      "video": "ujBrlMO7ThQ", "steamAppId": "3456660",
+      "art": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3456660/4d8dca2e8d0c3850edebe5b327041c5b3cf178df/header.jpg",
+      "install": { "mode": "engine", "engine": "quest-recipe-v1", "storage": "PAYDAY_Aces_High/Quest", "asset": "^PAYDAY_Quest_(Windows_v[\\d.]+\\.exe|v[\\d.]+\\.zpkg)$" },
+      "stateDir": "PAYDAY_Aces_High",
+      "detect": [{ "path": "PAYDAY_Aces_High/Quest/*/*/installation.json", "version": "patch_version", "state": "state", "ok": "installed" }],
+      "dep": { "label": "게임 빌드", "value": "131336", "note": "Quest 3 · Windows 설치기" },
+      "notes": {
+        "0.1.5": ["게임 빌드 131336(게임 버전 1.1) 대응", "새 문구 55개와 바뀐 문구 39개 번역(은행 강도 팩, 새 DLC 무기·방패)", "화면 부품 문구 15개와 파티·친구 알림 10개 번역"],
+        "0.1.4": ["게임 빌드 131115 대응", "작전 포기 · 재시작 등 파티 알림 번역"],
+        "0.1.3": ["메뉴 · 장비 · 브리핑 · 임무 · 상점 · 도전 과제 한국어화", "도입 영상 자막, 지도 6종, 튜토리얼 포스터", "원클릭 설치 · 복구, 중단 기록 복구"]
+      },
+      "tips": [
+        "Quest 3를 USB로 연결한 상태에서 설치합니다. <b>설치 중에는 케이블을 분리하지 마세요.</b>",
+        "게임이 업데이트되면 해당 빌드용 새 패치가 나올 때까지 기다려 주세요."
+      ]
+    },
+    "CONVRGENCE-KoreanPatch": {
+      "id": "convrgence", "kind": "patch", "order": 30,
+      "name": "CONVRGENCE", "sub": "컨버전스",
+      "platforms": ["pcvr"], "store": "Steam", "steamAppId": "2609610",
+      "install": { "mode": "exe", "asset": "^CONVRGENCE_Steam_Windows_.*\\.exe$" },
+      "stateDir": "CONVRGENCE",
+      "detect": [{ "path": "CONVRGENCE/installations/*/*/installation.json", "version": "patch_version", "state": "state", "ok": "installed" }],
+      "dep": { "label": "게임 버전", "value": "1.1.1", "note": "빌드 26546310 대응" },
+      "notes": {
+        "1.5.3": ["게임 1.1.1 (빌드 26546310) 대응", "방어구 시험 목표 10회 · 교단 의식 임무 지역 표기 반영", "음성 자막 912개 유지"],
+        "1.5.2": ["PDA 임무 진행 숫자 크기 · 기준선 정렬", "열매 수집 보상 이름 표시 통일", "차량 업그레이드 카드 설명 행간 개선"],
+        "1.5.1": ["할로윈 R1~R5 보상 이름 겹침 수정", "GitHub 버전 확인 인증서 오류 수정"],
+        "1.5.0": ["게임 1.1.0 · 할로윈 업데이트 대응", "추가 음성 자막 통합"]
+      },
+      "tips": ["무전 · 방송 · 전투 자막까지 포함된 통합판입니다.", "제거 · 원본 복구는 설치기에서 언제든 할 수 있습니다."]
+    },
+    "Titanfall2VR-KoreanPatch": {
+      "id": "tf2vr", "kind": "patch", "order": 40,
+      "name": "Titanfall 2 VR", "sub": "타이탄폴 2 · VR 모드",
+      "platforms": ["pcvr"], "store": "EA App · Steam", "steamAppId": "1237970",
+      "install": { "mode": "engine", "engine": "pc-tf2vr", "asset": "^Titanfall2VR-Korean-GitHub\\.zip$" },
+      "stateDir": "Titanfall2VR",
+      "dep": { "label": "VR 모드", "value": "1.0.25", "note": "VR 모드 1.0.25 기준 번역" },
+      "notes": {
+        "0.2.29": ["VR 모드 1.0.25 기준 변경 문구 166개 수정", "VR 해상도 · 계단 현상 · 타이탄 머리 회전 설정 번역", "후반부 타이탄 시스템 메시지 누락 번역 보완"],
+        "0.2.28": ["VR 모드 1.0.17 메인 메뉴 대응", "캘리브레이션 안내 이미지 자동 재적용"],
+        "0.2.27": ["짚라인 탑승 안내 · 일시정지 메뉴 번역 수정"]
+      },
+      "tips": [
+        "게임 설정 → 사운드에서 <b>자막을 켜야</b> 한글이 보입니다.",
+        "VR 모드가 업데이트되면 한글 파일 일부가 바뀔 수 있어요. 이 런처의 <b>설치 확인 / 재설치</b>로 다시 맞춘 뒤 <b>VR 게임 실행</b>을 눌러 주세요.",
+        "VR 모드 자체의 업데이트는 공식 VR 모드 설치기에서 진행합니다."
+      ]
+    },
+    "a-fishermans-tale-korean-patch": {
+      "id": "aft", "kind": "patch", "order": 50,
+      "name": "A Fisherman's Tale", "sub": "어 피셔맨스 테일",
+      "platforms": ["pcvr", "quest"], "store": "Steam · Meta Quest Store", "steamAppId": "559330",
+      "install": { "mode": "engine", "engine": "pc-aft-steam", "questFallback": true, "asset": "^A-Fishermans-Tale_.*_Setup_[\\d.]+\\.exe$" },
+      "stateDir": "A-Fishermans-Tale",
+      "variantLabel": "Steam · PC VR",
+      "variants": [{
+        "id": "aft-quest", "variantLabel": "Meta Quest", "platforms": ["quest"], "store": "Meta Quest Store",
+        "pkgKey": "a-fishermans-tale-korean-patch.quest", "stateDir": null,
+        "install": { "mode": "engine", "engine": "quest-recipe-v1", "storage": "A-Fishermans-Tale/Quest", "asset": "^AFT_Quest_v[\\d.]+\\.zpkg$" },
+        "detect": [{ "path": "A-Fishermans-Tale/Quest/*/25/installation.json", "version": "patch_version", "state": "state", "ok": "installed" }],
+        "dep": { "label": "게임 버전", "value": "1.087", "note": "Quest 빌드 25 · 번역 데이터 1.0.0" },
+        "tips": ["자막과 인터페이스를 한글화하며 <b>영어 음성은 유지</b>됩니다.", "Quest를 USB로 연결한 상태에서 설치합니다. <b>설치 중에는 케이블을 분리하지 마세요.</b>", "원본 게임 데이터는 이 PC에 보관하며, 이 화면에서 언제든 원본 복구를 할 수 있어요."]
+      }],
+      "dep": { "label": "번역 데이터", "value": "1.0.0", "note": "자막 · 인터페이스 · 나눔고딕" },
+      "notes": {
+        "1.1.5": ["Quest 전송 실패 시 임시 파일 자동 정리", "USB 재연결 후 설치 · 복구 재시도 지원"],
+        "1.1.3": ["PCVR · Quest 통합 설치기"],
+        "1.1.2": ["Quest 긴 경로 오류 수정"]
+      },
+      "tips": ["자막과 인터페이스를 한글화하며 <b>영어 음성은 유지</b>됩니다.", "Steam판은 이 런처에서 바로 설치·원본 복구를 할 수 있어요.", "Quest 단독판은 위쪽 <b>Meta Quest</b> 버튼을 눌러 설치합니다."]
+    },
+    "IntoTheRadius2-Quest-KoreanPatch": {
+      "id": "itr2", "kind": "patch", "order": 60,
+      "name": "Into the Radius 2", "sub": "인투 더 레디어스 2",
+      "platforms": ["quest"], "store": "Meta Quest Store", "steamAppId": "2307350",
+      "install": { "mode": "engine", "engine": "quest-recipe-v1", "storage": "ITR2QuestPatch", "asset": "^ITR2_Quest_(v[\\d.]+\\.exe|v[\\d.]+\\.zpkg)$" },
+      "stateDir": "ITR2QuestPatch",
+      "detect": [{ "path": "ITR2QuestPatch/userdata/*/*/installation.json", "version": "release", "state": "state", "ok": "installed" }],
+      "dep": { "label": "게임 버전", "value": "1.2.5", "note": "Quest 단독판 · 빌드 483352" },
+      "notes": {
+        "1.2.5": ["Quest 단독판 1.2.5 (483352) 대응", "Android 설치 도구 1.0.0 추가"],
+        "1.2.4": ["공개 배포본 버전 인식 문제 수정"]
+      },
+      "tips": ["설치 중에는 <b>USB 케이블을 분리하지 마세요.</b>", "설치 전에 세이브와 설정을 이 PC에 자동으로 백업합니다.", "게임이 업데이트되면 새 패치가 필요합니다. 원본 복구는 이 런처에서 할 수 있습니다."]
+    },
+    "GunmanContracts-KoreanPatch": {
+      "id": "gunman", "kind": "patch", "order": 70,
+      "name": "Gunman Contracts", "sub": "건맨 컨트랙츠 · Stand Alone",
+      "platforms": ["pcvr"], "store": "Steam", "steamAppId": "2421750",
+      "install": { "mode": "engine", "engine": "pc-gunman", "asset": "^GunmanContracts-KoreanPatch-v\\.[\\d.]+\\.zip$" },
+      "stateDir": "GunmanContracts",
+      "dep": { "label": "게임 버전", "value": "0.3.1.1", "note": "Steam 빌드 25666351 대응" },
+      "notes": {
+        "1.0.2": ["게임 0.3.1.1 대응", "번역표 1,380개 항목 반영", "저장 경고 · 제작진 화면 등 UI 60곳 보완"],
+        "1.0.1": ["게임 0.3.1.0 대응", "VR 잡기 · 그래픽 설정 번역"],
+        "1.0.0": ["나눔고딕 교체판 첫 공개"]
+      },
+      "tips": ["패치 데이터가 커서(약 1GB) 처음 설치할 때 받는 데 시간이 걸립니다.", "설치 후 게임 언어에서 <b>한국어(독일어 자리)</b>를 선택하고 자막을 <b>모두</b>로 설정하세요.", "원본 백업은 게임 폴더의 <code>KoreanPatchBackup</code>에 보관되며, 원본 복구는 이 런처에서 할 수 있습니다."]
+    },
+    "BattleGroupVR2-KoreanPatch": {
+      "id": "bgvr2", "kind": "patch", "order": 80,
+      "name": "BattleGroupVR2", "sub": "배틀그룹 VR 2",
+      "platforms": ["pcvr"], "store": "Steam", "steamAppId": "3385960",
+      "install": { "mode": "engine", "engine": "pc-bg2", "asset": "^BattleGroupVR2-KoreanPatch-v\\.[\\d.]+\\.zip$" },
+      "stateDir": "BattleGroupVR2",
+      "dep": { "label": "게임 빌드", "value": "26115335", "note": "2026-11-11 업데이트 대응" },
+      "notes": {
+        "1.1.1": ["2026-11-11 게임 업데이트(빌드 26115335) 대응", "새 스토리 대사 · 임무 목표 · 스커미시 편집 화면 번역", "남은 영어 대사 번역 · 기존 오타·오역 수정"],
+        "1.0.0": ["첫 공개 버전"]
+      },
+      "tips": ["게임을 종료한 상태에서 설치해 주세요.", "지원하지 않는 버전이라고 나오면 게임이 업데이트된 것입니다. 새 한글패치가 나오면 이 런처에 자동으로 표시됩니다.", "원본 백업은 게임 폴더의 <code>KoreanPatchBackup</code>에 보관되며, 원본 복구는 이 런처에서 할 수 있습니다."]
+    },
+    "glasses-fov-lab": {
+      "id": "fovlab", "kind": "tool", "order": 100,
+      "name": "Meta VR Glasses FoV Tester", "sub": "VR 글래스 시야각 체험 앱 · 이전 이름 Glasses FoV Lab",
+      "platforms": ["quest"], "store": "Meta XR SDK", "glyph": "FoV", "tint": "#2b2340",
+      "install": { "mode": "engine", "engine": "quest-fovlab", "asset": "^GlassesFoVLab-[\\d.]+-Windows\\.zip$" },
+      "stateDir": null,
+      "detect": [{ "path": "Launcher/fovlab/installation.json", "version": "patch_version", "state": "state", "ok": "installed" }],
+      "dep": { "label": "개발 도구", "value": "Meta XR SDK", "note": "Meta VR CLI 사용" },
+      "notes": { "0.4.6": ["시야를 끈 뒤 양쪽 눈 화면이 어긋나 보이던 문제 수정", "업데이트 후 활성화를 한 번 다시 실행해야 적용"], "0.4.5": ["앱 이름 변경: Meta VR Glasses FoV Tester", "레이저로 누르는 조작 패널 · 컨트롤러 버튼 오작동 방지", "무선 디버깅으로 페어링한 Quest는 USB 없이 연결"], "0.3.4": ["Windows 원클릭 설치 지원"], "0.1.2": ["첫 공개 버전"] },
+      "tips": ["VR 글래스 제품들의 시야각 차이를 Quest 안에서 직접 비교해 볼 수 있습니다.", "다른 게임에도 글래스 시야를 쓰려면 <b>다른 게임에 적용 켜기</b>를 누른 뒤, 앱의 ‘글래스 시야’ 스위치를 켜세요.", "다른 게임 적용은 Quest 3·3S·Pro 전용이며, Quest를 재부팅하면 다시 켜야 합니다. 무선으로 연결돼 있으면 케이블 없이 다시 켤 수 있어요."]
+    }
+  }
+}

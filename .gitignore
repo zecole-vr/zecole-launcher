@@ -1,0 +1,9 @@
+src/bin/
+src/obj/
+dist/
+release-staging/
+*.user
+.vs/
+native/zlib/*.obj
+native/zlib/*.lib
+native/zlib/*.exp

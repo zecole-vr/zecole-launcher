@@ -1,0 +1,25 @@
+{
+  "id": "newgame",
+  "kind": "patch",
+  "name": "New Game VR",
+  "sub": "뉴 게임 VR",
+  "platforms": ["quest"],
+  "store": "Meta Quest Store",
+  "steamAppId": "",
+  "video": "",
+  "art": "",
+  "keywords": ["뉴게임"],
+  "questStoreUrl": "",
+
+  "install": { "mode": "exe", "asset": "^NewGame_Quest_Setup_v[\\d.]+\\.exe$" },
+  "stateDir": "NewGame",
+
+  "dep": { "label": "게임 버전", "value": "1.0.0", "note": "Quest 단독판 빌드 000000" },
+  "tips": [
+    "Quest 개발자 모드를 켜고 USB로 연결한 뒤 설치하세요.",
+    "게임이 업데이트되면 새 패치가 나올 때까지 기다려 주세요."
+  ],
+  "notes": {
+    "1.0.0": ["첫 공개 버전"]
+  }
+}

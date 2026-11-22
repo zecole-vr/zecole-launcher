@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZECOLE 한글패치</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#0e0e11; --bg-2:#131317; --surface:#18181d; --surface-2:#1f1f25; --surface-3:#26262d;
+  --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.12);
+  --text:#eeebe4; --text-2:#bdb9b0; --muted:#8a867d; --faint:#5f5c56;
+  --accent:#e6a96e; --accent-hi:#f3c896; --accent-ink:#2a1b0d; --accent-soft:rgba(230,169,110,.12);
+  --ok:#6cc08a; --ok-soft:rgba(108,192,138,.12);
+  --warn:#e6a96e; --err:#e8667a; --info:#8fb3ff;
+  --yt:#ff4e45;
+  --r-sm:8px; --r:12px; --r-lg:16px;
+  --shadow:0 20px 60px rgba(0,0,0,.45);
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Pretendard",-apple-system,"Malgun Gothic",sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden;font-feature-settings:"tnum" 1}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+a{color:inherit;text-decoration:none}
+img{display:block}
+.num{font-variant-numeric:tabular-nums}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:#2b2b32;border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+
+/* ── window shell ── */
+/* 창 크기: 실제 앱에서는 프레임 없는 1120x720 창으로 띄우면 이 영역이 창 전체가 됩니다 */
+body.host{display:grid;place-items:center;background:#08080a radial-gradient(ellipse at 30% 20%,#1a1712 0,transparent 60%)}
+.app{width:min(1120px,100vw);height:min(720px,100vh);display:grid;grid-template-rows:40px 1fr;background:var(--bg);
+  border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.09),0 30px 90px rgba(0,0,0,.6)}
+@media (max-width:1140px),(max-height:740px){.app{border-radius:0;box-shadow:none}}
+.titlebar{display:flex;align-items:center;gap:12px;padding:0 0 0 16px;background:var(--bg);border-bottom:1px solid var(--line);-webkit-app-region:drag;user-select:none}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:22px;height:22px;border-radius:6px;background:linear-gradient(140deg,var(--accent-hi),#c9864a);display:grid;place-items:center;color:var(--accent-ink);font-weight:900;font-size:13px;letter-spacing:-.5px}
+.brand b{font-weight:800;letter-spacing:.14em;font-size:12px}
+.brand span{color:var(--muted);font-size:12px}
+.tb-sp{flex:1}
+.tb-meta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;padding-right:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block;flex:none}
+.dot.warn{background:var(--warn)} .dot.off{background:var(--faint)} .dot.err{background:var(--err)}
+.winbtns{display:flex;-webkit-app-region:no-drag;height:100%}
+.winbtns button{width:46px;height:100%;display:grid;place-items:center;color:var(--text-2)}
+.winbtns button:hover{background:var(--surface-2)} .winbtns button.x:hover{background:#c42b1c;color:#fff}
+
+.body{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:0}
+
+/* ── sidebar ── */
+.side{background:var(--bg-2);min-width:0;border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.side-scroll{flex:1;overflow:auto;padding:14px 10px}
+.nav{display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;border-radius:var(--r-sm);color:var(--text-2);width:100%;text-align:left;font-weight:600}
+.nav:hover{background:var(--surface);color:var(--text)}
+.nav.on{background:var(--surface-2);color:var(--text)}
+.nav svg{opacity:.85}
+.sec{display:flex;align-items:center;justify-content:space-between;margin:16px 10px 6px;font-size:11px;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.sec em{font-style:normal;color:var(--faint);font-weight:600}
+.gitem{position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:6px 10px;border-radius:var(--r-sm);text-align:left}
+.gitem:hover{background:var(--surface)}
+.gitem.on{background:var(--surface-2)}
+.gitem.on::before{content:"";position:absolute;left:-10px;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
+.gthumb{width:38px;height:38px;border-radius:8px;flex:none;background:var(--surface-3) center/cover;box-shadow:inset 0 0 0 1px var(--line)}
+.gmeta{min-width:0;flex:1}
+.gname{font-weight:650;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gsub{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden}
+.gsub .warn-t{color:var(--accent)}
+.req{display:flex;align-items:center;gap:10px;width:100%;margin-top:6px;padding:10px;border-radius:var(--r-sm);border:1px dashed var(--line-2);color:var(--muted);font-size:12.5px}
+.req:hover{color:var(--text);border-color:var(--accent)}
+
+.creator{border-top:1px solid var(--line);padding:14px 14px 16px}
+.cr-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(140deg,#2c2c34,#1b1b20);box-shadow:inset 0 0 0 1px var(--line-2);display:grid;place-items:center;font-weight:900;color:var(--accent);font-size:14px}
+.cr-top b{display:block;font-size:13px}
+.cr-top span{font-size:11.5px;color:var(--muted)}
+.cr-links{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.chip-btn{display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border-radius:var(--r-sm);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-size:12px;font-weight:600;color:var(--text-2)}
+.chip-btn:hover{background:var(--surface-2);color:var(--text)}
+.donate{width:100%;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:7px;font-weight:700;font-size:13px;color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(230,169,110,.28)}
+.donate:hover{background:rgba(230,169,110,.2)}
+
+/* ── main ── */
+.main{overflow:auto;min-height:0;position:relative}
+.page{padding:24px 28px 32px;max-width:1240px;margin:0 auto;animation:fade .28s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:11.5px;letter-spacing:.12em;color:var(--muted);font-weight:700}
+h1{font-size:26px;letter-spacing:-.02em;margin:6px 0 4px;font-weight:800}
+.lede{color:var(--text-2);margin:0}
+.head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px}
+.seg{display:flex;background:var(--surface);border-radius:10px;padding:3px;box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{height:28px;padding:0 12px;border-radius:7px;font-size:12.5px;color:var(--muted);font-weight:600}
+.seg button.on{background:var(--surface-3);color:var(--text)}
+
+.alert{display:flex;align-items:center;gap:14px;padding:12px 14px 12px 16px;border-radius:var(--r);background:linear-gradient(90deg,rgba(230,169,110,.14),rgba(230,169,110,.04));box-shadow:inset 0 0 0 1px rgba(230,169,110,.22);margin-bottom:22px}
+.alert p{margin:0;flex:1;color:var(--text-2)} .alert b{color:var(--text)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card{position:relative;border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px var(--line-2),var(--shadow)}
+.cover{aspect-ratio:16/8;background:var(--surface-3) center/cover;position:relative}
+.cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(24,24,29,.95))}
+.plat{position:absolute;top:12px;left:12px;z-index:1;display:flex;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.02em;background:rgba(10,10,12,.66);backdrop-filter:blur(8px);color:var(--text-2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.tag.ok{color:var(--ok)} .tag.warn{color:var(--accent)}
+.card-body{padding:2px 16px 16px;margin-top:-26px;position:relative;z-index:1}
+.card h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.01em}
+.card .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.status{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-2)}
+.mini{height:30px;padding:0 12px;border-radius:8px;font-size:12.5px;font-weight:700;background:var(--surface-3);color:var(--text)}
+.mini:hover{background:#30303a}
+.mini.acc{background:var(--accent);color:var(--accent-ink)} .mini.acc:hover{background:var(--accent-hi)}
+.card.ghost{display:grid;place-items:center;text-align:center;min-height:250px;background:transparent;box-shadow:inset 0 0 0 1px var(--line);border:1px dashed var(--line-2);color:var(--muted)}
+.card.ghost:hover{color:var(--text)}
+.card.ghost .plus{width:44px;height:44px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2)}
+
+.channel{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;margin-top:28px}
+.panel{border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);padding:18px}
+.panel-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.panel-h h2{margin:0;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.link{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.link:hover{color:var(--accent)}
+.vids{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.vid{cursor:pointer}
+.vthumb{aspect-ratio:16/9;border-radius:9px;background:var(--surface-3) center/cover;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.vthumb::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,0);transition:background .2s}
+.vid:hover .vthumb::after{background:rgba(0,0,0,.25)}
+.vplay{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transition:opacity .2s;z-index:1}
+.vid:hover .vplay{opacity:1}
+.vt{font-size:12.5px;font-weight:600;line-height:1.4;margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vg{font-size:11.5px;color:var(--muted);margin-top:3px}
+.stack{display:grid;gap:16px}
+.promo{display:flex;gap:14px;align-items:center;cursor:pointer;transition:background .2s}
+.promo:hover{background:var(--surface-2)}
+.promo-ic{width:46px;height:46px;border-radius:12px;flex:none;display:grid;place-items:center}
+.promo h3{margin:0 0 2px;font-size:14.5px;font-weight:800}
+.promo p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.promo .arr{margin-left:auto;color:var(--faint)}
+
+/* ── detail ── */
+.hero{position:relative;height:250px;background:#111 center 30%/cover;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,14,17,.15) 0%,rgba(14,14,17,.35) 45%,var(--bg) 100%),linear-gradient(90deg,rgba(14,14,17,.75),transparent 60%)}
+.hero-in{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 28px 20px;max-width:1240px;margin:0 auto}
+.crumb{position:absolute;top:16px;left:28px;z-index:2;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);height:30px;padding:0 12px 0 8px;border-radius:8px;background:rgba(10,10,12,.5);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.crumb:hover{color:var(--text)}
+.hero h1{font-size:34px;margin:10px 0 2px;letter-spacing:-.025em;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.hero .lede{font-size:14px}
+.dpage{padding:0 28px 32px;max-width:1240px;margin:0 auto}
+.actionbar{display:flex;align-items:stretch;gap:10px;margin-top:6px}
+.primary{position:relative;flex:0 0 320px;height:56px;border-radius:var(--r);background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden;transition:background .15s,transform .1s;box-shadow:0 10px 30px rgba(230,169,110,.18)}
+.primary:hover{background:var(--accent-hi)} .primary:active{transform:scale(.99)}
+.primary.play{background:#eeebe4;box-shadow:0 10px 30px rgba(255,255,255,.06)} .primary.play:hover{background:#fff}
+.primary.busy{background:var(--surface-2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2);cursor:default}
+.primary .bar{position:absolute;left:0;top:0;bottom:0;background:rgba(230,169,110,.18);transition:width .25s linear}
+.primary .bar::after{content:"";position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--accent)}
+.primary span,.primary svg{position:relative}
+.primary small{font-weight:600;opacity:.65;font-size:13px}
+.sec-btn{height:56px;padding:0 18px;border-radius:var(--r);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:8px;font-weight:650;color:var(--text-2)}
+.sec-btn:hover{background:var(--surface-2);color:var(--text)}
+.sec-btn.icon{width:56px;padding:0;justify-content:center}
+.act-note{display:flex;align-items:center;gap:8px;margin:12px 2px 0;font-size:12.5px;color:var(--muted);min-height:20px}
+.act-note b{color:var(--text-2);font-weight:600}
+
+.facts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.35fr);margin-top:24px;border-radius:var(--r-lg);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.fact{padding:16px 18px;min-width:0}
+.fact+.fact{border-left:1px solid var(--line)}
+.fact-l{font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between}
+.fact-v{font-size:20px;font-weight:800;margin-top:6px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px}
+.fact-s{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:0}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--accent-soft);color:var(--accent)} .pill.off{background:var(--surface-3);color:var(--muted)}
+.path{display:flex;align-items:center;gap:8px;margin-top:8px}
+.path code{flex:1;min-width:0;font-family:"Cascadia Mono",Consolas,monospace;font-size:12px;color:var(--text-2);background:var(--bg-2);padding:7px 10px;border-radius:7px;box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.path button{font-size:12px;font-weight:700;color:var(--accent);padding:0 6px;height:30px}
+
+.cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.notes{list-style:none;margin:0;padding:0}
+.note{position:relative;padding:0 0 18px 22px}
+.note::before{content:"";position:absolute;left:4px;top:8px;bottom:-6px;width:1px;background:var(--line-2)}
+.note:last-child::before{display:none}
+.note::after{content:"";position:absolute;left:0;top:4px;width:9px;height:9px;border-radius:50%;background:var(--surface);box-shadow:inset 0 0 0 2px var(--faint)}
+.note.cur::after{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)}
+.note-h{display:flex;align-items:baseline;gap:10px}
+.note-h b{font-size:13.5px}
+.note-h span{font-size:12px;color:var(--muted)}
+.note ul{margin:6px 0 0;padding-left:16px;color:var(--text-2);font-size:13px}
+.note li{margin:2px 0}
+.tips{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.tips li{display:flex;gap:10px;font-size:13px;color:var(--text-2);line-height:1.55}
+.tips li svg{flex:none;margin-top:3px;color:var(--accent)}
+.res{display:grid;gap:2px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.res a{display:flex;align-items:center;justify-content:space-between;height:34px;padding:0 8px;margin:0 -8px;border-radius:7px;font-size:13px;color:var(--text-2)}
+.res a:hover{background:var(--surface-2);color:var(--text)}
+.device{display:inline-flex;align-items:center;gap:7px;height:26px;padding:0 10px;border-radius:7px;font-size:12px;font-weight:600;background:rgba(10,10,12,.55);backdrop-filter:blur(8px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);color:var(--text-2)}
+
+/* ── modal & toast ── */
+.scrim{position:fixed;inset:0;background:rgba(6,6,8,.62);backdrop-filter:blur(4px);display:none;place-items:center;z-index:50}
+.scrim.on{display:grid;animation:fade .2s}
+.modal{width:440px;border-radius:18px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2),var(--shadow);padding:26px}
+.modal h2{margin:0 0 6px;font-size:20px;font-weight:800}
+.modal p{margin:0 0 18px;color:var(--text-2);font-size:13.5px;line-height:1.65}
+.dn{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:12px;background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:8px;text-align:left}
+.dn:hover{box-shadow:inset 0 0 0 1px rgba(230,169,110,.45)}
+.dn b{display:block;font-size:14px} .dn span{font-size:12px;color:var(--muted)}
+.dn .arr{margin-left:auto;color:var(--faint)}
+.dn-ic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-weight:900;font-size:13px;flex:none}
+.modal .close{display:block;margin:12px auto 0;color:var(--muted);font-size:13px;height:32px;padding:0 12px}
+.modal .close:hover{color:var(--text)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;background:#24242b;box-shadow:inset 0 0 0 1px var(--line-2),var(--shadow);font-size:13px;font-weight:600;transition:all .25s var(--ease);z-index:60;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+.glyph{position:absolute;inset:0;display:grid;place-items:center;font-weight:900;letter-spacing:-.04em;color:rgba(230,220,255,.85);z-index:0}
+.glyph-s{font-size:11px}.glyph-l{font-size:44px;opacity:.5}.glyph-xl{font-size:120px;opacity:.18;justify-items:end;padding-right:60px}
+.gthumb{position:relative;overflow:hidden}
+.new{font-size:9.5px;font-weight:800;color:var(--accent-ink);background:var(--accent);padding:0 4px;border-radius:3px;letter-spacing:.04em}
+.tag.new-tag{color:var(--accent-ink);background:var(--accent);box-shadow:none}
+.pulse{animation:pulse 1s ease-in-out infinite alternate}@keyframes pulse{from{opacity:.35}to{opacity:1}}
+.empty{grid-column:1/-1;padding:40px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:var(--r-lg)}
+.sub-h{display:flex;align-items:baseline;gap:10px;margin:28px 0 12px}.sub-h h2{margin:0;font-size:15px;font-weight:800}.sub-h span{font-size:12.5px;color:var(--muted)}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.seg.mini-seg{padding:2px;border-radius:7px}.seg.mini-seg button{height:20px;padding:0 8px;font-size:11px;border-radius:5px}
+.fact-l{gap:8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="host">
+<div class="app">
+  <header class="titlebar">
+    <div class="brand"><div class="mark">Z</div><b>ZECOLE</b><span>한글패치 런처</span></div>
+    <div class="tb-sp"></div>
+    <div class="tb-meta num" id="syncMeta"></div><div class="tb-meta num" style="color:var(--faint)">런처 v1.0.0</div>
+    <div class="winbtns">
+      <button aria-label="최소화"><svg width="10" height="10"><path d="M0 5h10" stroke="currentColor"/></svg></button>
+      <button aria-label="최대화"><svg width="10" height="10"><rect x=".5" y=".5" width="9" height="9" fill="none" stroke="currentColor"/></svg></button>
+      <button class="x" aria-label="닫기"><svg width="10" height="10"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor"/></svg></button>
+    </div>
+  </header>
+  <div class="body">
+    <aside class="side">
+      <div class="side-scroll">
+        <button class="nav" id="navHome" onclick="go('home')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          라이브러리
+        </button>
+                <div id="sideList"></div>
+        <button class="req" onclick="openUrl(CONFIG.request)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          다음 한글패치 요청하기
+        </button>
+      </div>
+      <div class="creator">
+        <div class="cr-top">
+          <div class="avatar">Z</div>
+          <div><b>제콜 ZECOLE</b><span>VR 게임 리뷰 · 한글패치 제작</span></div>
+        </div>
+        <div class="cr-links">
+          <button class="chip-btn" onclick="openUrl(CONFIG.youtube)"><svg width="14" height="14" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="5" fill="var(--yt)"/><path d="M10 8.5v7l6-3.5z" fill="#fff"/></svg>YouTube</button>
+          <button class="chip-btn" onclick="openUrl(CONFIG.web)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>zecole.store</button>
+        </div>
+        <button class="donate" onclick="showDonate()"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.4 3 5 6.4 5c2 0 3.3 1 5.6 3.3C14.3 6 15.6 5 17.6 5 21 5 23 8.4 21.6 11.7 19.5 16.4 12 21 12 21z"/></svg>제작 후원하기</button>
+      </div>
+    </aside>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="if(event.target===this)hideDonate()">
+  <div class="modal" role="dialog" aria-labelledby="dnT">
+    <h2 id="dnT">한글패치 제작 후원</h2>
+    <p>모든 한글패치는 무료입니다. 후원은 번역 검수와 새 게임 작업 시간에 그대로 쓰입니다. 금액과 상관없이 큰 힘이 됩니다.</p>
+    <button class="dn" onclick="openUrl(CONFIG.donate.toonation)"><span class="dn-ic" style="background:#1e2a3a;color:#6fb2ff">T</span><span><b>투네이션</b><span>카드 · 계좌 · 문화상품권</span></span><span class="arr">→</span></button>
+    <button class="dn" onclick="openUrl(CONFIG.donate.toss)"><span class="dn-ic" style="background:#13233f;color:#3182f6">₩</span><span><b>토스로 보내기</b><span>로그인 없이 바로 송금</span></span><span class="arr">→</span></button>
+    <button class="dn" onclick="openUrl(CONFIG.donate.membership)"><span class="dn-ic" style="background:#3a1715;color:var(--yt)">▶</span><span><b>유튜브 채널 멤버십</b><span>매월 정기 후원 · 멤버 전용 혜택</span></span><span class="arr">→</span></button>
+    <button class="close" onclick="hideDonate()">닫기</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════ 설정: 링크는 여기만 고치면 됩니다 ════════ */
+const CONFIG = {
+  github: "zecole-vr",
+  youtube: "https://www.youtube.com/@zecole",
+  web: "https://zecole.store",
+  request: "https://zecole.store",            // 패치 요청 폼 주소로 교체
+  donate: {
+    toonation: "https://toon.at/donate/zecole",  // 실제 주소로 교체
+    toss: "https://toss.me/zecole",              // 실제 주소로 교체
+    membership: "https://www.youtube.com/@zecole/join"
+  }
+};
+
+const steam = (id, file = "library_hero.jpg") => `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/${file}`;
+const akamai = p => `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${p}`;
+
+/* ════════ 등록된 모드: github.com/zecole-vr 저장소 기준 ════════
+   repo        : GitHub 저장소 이름 → 실행 시 최신 릴리스를 자동 조회
+   installed   : 데모용 설치 상태 (실제 앱에서는 로컬 설치 기록으로 감지)
+   latest/notes: 오프라인일 때 보여줄 마지막 확인값 */
+const GAMES = [
+  {
+    id: "payday", repo: "PAYDAY-KoreanPatch-Quest", kind: "patch",
+    name: "PAYDAY: Aces High", sub: "페이데이: 에이스 하이",
+    platform: "Quest 단독", store: "Meta Quest Store",
+    art: akamai("3456660/4d8dca2e8d0c3850edebe5b327041c5b3cf178df/header.jpg"),
+    thumb: akamai("3456660/4d8dca2e8d0c3850edebe5b327041c5b3cf178df/header.jpg"), tint: "#3a1f1f",
+    installed: null, latest: "0.1.4", date: "2026-11-07",
+    dep: { label: "게임 빌드", value: "131115", note: "Quest 3 · Windows 설치기", ok: true },
+    device: { name: "Meta Quest 3", connected: true },
+    notes: [
+      { v: "0.1.4", d: "2026-11-07", items: ["게임 빌드 131115 대응", "작전 포기·재시작 등 파티 알림 문구 추가 번역"] },
+      { v: "0.1.3", d: "2026-11-06", items: ["메뉴·장비·브리핑·임무·상점·도전 과제 한국어화", "도입 영상 자막, 지도 6종, 튜토리얼 포스터", "원클릭 설치·복구, 중단 기록 복구"] }
+    ],
+    tips: ["Quest 3를 USB로 연결한 상태에서 설치합니다. <b>설치 중에는 케이블을 분리하지 마세요.</b>", "게임이 업데이트되면 해당 빌드용 새 패치가 나올 때까지 기다려 주세요."]
+  },
+  {
+    id: "convrgence", repo: "CONVRGENCE-KoreanPatch", kind: "patch",
+    name: "CONVRGENCE", sub: "컨버전스",
+    platform: "PC VR", store: "Steam",
+    art: steam(2609610), thumb: steam(2609610, "header.jpg"), tint: "#1d2f2a",
+    installed: "1.5.1", latest: "1.5.2", date: "2026-10-30",
+    dep: { label: "게임 버전", value: "1.1.0", note: "빌드 26164481 대응", ok: true },
+    path: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\CONVRGENCE",
+    notes: [
+      { v: "1.5.2", d: "2026-10-30", items: ["PDA 임무 진행 숫자 크기·기준선 정렬 (7개 지역 21곳)", "열매 수집 보상 이름 표시 통일", "차량 업그레이드 카드 설명 행간 개선"] },
+      { v: "1.5.1", d: "2026-10-30", items: ["할로윈 R1~R5 보상 이름 겹침 수정", "GitHub 버전 확인 인증서 오류 수정"] },
+      { v: "1.5.0", d: "2026-10-24", items: ["게임 1.1.0 · 할로윈 업데이트 대응", "추가 음성 자막 통합"] }
+    ],
+    tips: ["무전·방송·전투 자막까지 포함된 통합판입니다.", "제거 버튼으로 언제든 원본 파일로 복구할 수 있습니다."]
+  },
+  {
+    id: "tf2vr", repo: "Titanfall2VR-KoreanPatch", kind: "patch",
+    name: "Titanfall 2 VR", sub: "타이탄폴 2 · VR 모드",
+    platform: "PC VR", store: "EA App · Steam",
+    art: steam(1237970), thumb: steam(1237970, "header.jpg"), tint: "#2a3a4f",
+    installed: "0.2.29", latest: "0.2.29", date: "2026-10-25",
+    dep: { label: "VR 모드", value: "1.0.25", note: "VR 모드 1.0.25 기준 번역", ok: true },
+    path: "C:\\Program Files\\EA Games\\Titanfall2",
+    notes: [
+      { v: "0.2.29", d: "2026-10-25", items: ["VR 모드 1.0.25 기준 변경 문구 166개 수정", "VR 해상도·계단 현상·타이탄 머리 회전 설정 번역", "후반부 타이탄 시스템 메시지 누락 번역 보완"] },
+      { v: "0.2.28", d: "2026-10-12", items: ["VR 모드 1.0.17 메인 메뉴 대응", "캘리브레이션 안내 이미지 자동 재적용"] },
+      { v: "0.2.27", d: "2026-10-08", items: ["짚라인 탑승 안내·일시정지 메뉴 번역 수정"] }
+    ],
+    tips: ["게임 설정 → 사운드에서 <b>자막을 켜야</b> 한글이 보입니다.", "공식 VR 설치기로 직접 실행하면 자동 복구를 거치지 않습니다. <b>이 런처의 실행 버튼</b>을 이용해 주세요."]
+  },
+  {
+    id: "aft", repo: "a-fishermans-tale-korean-patch", kind: "patch",
+    name: "A Fisherman's Tale", sub: "어 피셔맨스 테일",
+    platform: "PC VR · Quest", store: "Steam · Meta Quest Store",
+    art: steam(559330), thumb: steam(559330, "header.jpg"), tint: "#1d2c3a",
+    installed: null, latest: "1.1.5", date: "2026-10-21",
+    dep: { label: "번역 데이터", value: "1.0.0", note: "자막 · 인터페이스 · 나눔고딕", ok: true },
+    both: true, target: "pc",
+    path: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\A Fisherman's Tale",
+    device: { name: "Meta Quest 3", connected: true },
+    notes: [
+      { v: "1.1.5", d: "2026-10-21", items: ["Quest 전송 실패 시 임시 파일 자동 정리", "USB 재연결 후 설치·복구 재시도 지원"] },
+      { v: "1.1.3", d: "2026-10-21", items: ["PCVR · Quest 통합 설치기"] },
+      { v: "1.1.2", d: "2026-10-21", items: ["Quest 긴 경로 오류 수정"] }
+    ],
+    tips: ["자막과 인터페이스를 한글화하며 <b>영어 음성은 유지</b>됩니다.", "Quest 설치 중 USB가 끊기면 다시 연결한 뒤 설치를 누르면 정리 후 재시도합니다."]
+  },
+  {
+    id: "itr2", repo: "IntoTheRadius2-Quest-KoreanPatch", kind: "patch",
+    name: "Into the Radius 2", sub: "인투 더 레디어스 2",
+    platform: "Quest 단독", store: "Meta Quest Store",
+    art: steam(2307350), thumb: steam(2307350, "header.jpg"), tint: "#4a2e18",
+    installed: "1.2.5", latest: "1.2.5", date: "2026-10-19",
+    dep: { label: "게임 버전", value: "1.2.5", note: "Quest 단독판 · 빌드 483352", ok: true },
+    device: { name: "Meta Quest 3", connected: true },
+    notes: [
+      { v: "1.2.5", d: "2026-10-19", items: ["Quest 단독판 1.2.5 (483352) 대응", "Android 설치 도구 1.0.0 추가"] },
+      { v: "1.2.4", d: "2026-10-09", items: ["공개 배포본 버전 인식 문제 수정"] }
+    ],
+    tips: ["설치 중에는 <b>USB 케이블을 분리하지 마세요.</b>", "게임이 업데이트되면 새 패치가 필요합니다. 제거 버튼으로 원본을 복구할 수 있습니다."]
+  },
+  {
+    id: "gunman", repo: "GunmanContracts-KoreanPatch", kind: "patch",
+    name: "Gunman Contracts", sub: "건맨 컨트랙츠 · Stand Alone",
+    platform: "PC VR", store: "Steam",
+    art: steam(2421750), thumb: steam(2421750, "header.jpg"), tint: "#3a2a1a",
+    installed: null, latest: "1.0.2", date: "2026-10-02",
+    dep: { label: "게임 버전", value: "0.3.1.1", note: "Steam 빌드 25666351 대응", ok: true },
+    path: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Gunman Contracts",
+    notes: [
+      { v: "1.0.2", d: "2026-10-02", items: ["게임 0.3.1.1 대응", "번역표 1,380개 항목 반영", "저장 경고·제작진 화면 등 UI 60곳 보완"] },
+      { v: "1.0.1", d: "2026-09-23", items: ["게임 0.3.1.0 대응", "VR 잡기·그래픽 설정 번역"] },
+      { v: "1.0.0", d: "2026-09-16", items: ["나눔고딕 교체판 첫 공개"] }
+    ],
+    tips: ["게임을 종료한 상태에서 설치해 주세요.", "Steam 업데이트로 게임 버전이 바뀌면 패치 업데이트가 필요할 수 있습니다."]
+  },
+  {
+    id: "bgvr2", repo: "BattleGroupVR2-KoreanPatch", kind: "patch",
+    name: "BattleGroupVR2", sub: "배틀그룹 VR 2",
+    platform: "PC VR", store: "Steam",
+    art: steam(3385960), thumb: akamai("3385960/19f2c7f34b49aa0bd555cc2cdf6035b85cfce984/header.jpg"), tint: "#1a2333",
+    installed: null, latest: "1.0.0", date: "2026-09-16",
+    dep: { label: "배포", value: "1.0.0", note: "2026-09-16 첫 공개", ok: true },
+    path: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BattleGroupVR2",
+    notes: [{ v: "1.0.0", d: "2026-09-16", items: ["첫 공개 버전"] }],
+    tips: ["게임을 종료한 상태에서 설치해 주세요."]
+  },
+  {
+    id: "fovlab", repo: "glasses-fov-lab", kind: "tool",
+    name: "Glasses FoV Lab", sub: "VR 글래스 시야각 체험 앱",
+    platform: "Quest 앱", store: "Meta XR SDK",
+    art: null, thumb: null, tint: "#2b2340", glyph: "FoV",
+    installed: null, latest: "0.3.4", date: "2026-09-27",
+    dep: { label: "개발 도구", value: "Meta XR SDK", note: "Meta VR CLI 사용", ok: true },
+    device: { name: "Meta Quest 3", connected: true },
+    notes: [
+      { v: "0.3.4", d: "2026-09-27", items: ["Windows 원클릭 설치 지원"] },
+      { v: "0.1.2", d: "2026-09-26", items: ["첫 공개 버전"] }
+    ],
+    tips: ["VR 글래스 제품들의 시야각 차이를 Quest 안에서 직접 비교해 볼 수 있습니다.", "Windows에서 원클릭으로 Quest에 설치됩니다."]
+  }
+];
+
+const VIDEOS = [
+  { id: "nyYLcHzBQHk", title: "신이 되어서 마을을 다스리는 게임입니다. 악신이 될까? 선신이 될까?", game: "How to God" },
+  { id: "oqc487P9wqI", title: "로보퀘스트 VR · PCVR vs QUEST 비교", game: "Roboquest VR" },
+  { id: "qX5apK5YzBg", title: "중세 선술집을 운영하는 게임입니다!", game: "Innkeeper VR" },
+  { id: "jy977KAAbnc", title: "컨트랙터즈 쇼다운 엑스필존 초보자 장비 세팅 가이드 A to Z", game: "SHOWDOWN" }
+];
+
+/* ════════ 상태 ════════ */
+const TODAY = new Date();
+const state = { view: "home", filter: "all", busy: null, sync: "checking", syncedAt: null };
+const $ = s => document.querySelector(s);
+const repoUrl = g => `https://github.com/${CONFIG.github}/${g.repo}`;
+const isNew = g => (TODAY - new Date(g.date)) / 864e5 <= 10;
+const ICON = {
+  play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  down: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  folder: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  undo: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6"/><path d="M4.5 15a8 8 0 1 0 1.9-8.3L4 10"/></svg>',
+  back: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+  ext: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg>',
+  check: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  info: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.1"/></svg>',
+  refresh: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/></svg>',
+  gh: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>'
+};
+
+const isTool = g => g.kind === "tool";
+const status = g => {
+  if (!g.installed) return { key: "new", label: "미설치", dot: "off", action: "설치" };
+  if (g.installed !== g.latest) return { key: "update", label: "업데이트 있음", dot: "warn", action: "업데이트" };
+  return { key: "ok", label: "최신 버전", dot: "", action: "실행" };
+};
+const bg = (g, key = "art") => g[key]
+  ? `background-image:url('${g[key]}'),linear-gradient(135deg,${g.tint},#15151a)`
+  : `background-image:radial-gradient(circle at 75% 30%,${g.tint} 0,transparent 60%),linear-gradient(135deg,${g.tint},#121216)`;
+const glyph = (g, size) => g[size === "s" ? "thumb" : "art"] ? "" : `<span class="glyph glyph-${size}">${g.glyph || g.name[0]}</span>`;
+const platMatch = (g, f) => f === "all" || (f === "installed" ? !!g.installed : f === "pc" ? g.platform.includes("PC") : g.platform.includes("Quest"));
+
+function go(view) { state.view = view; render(); $("#main").scrollTop = 0; }
+function openUrl(u) { toast(`브라우저에서 엽니다 · ${u.replace(/^https?:\/\//, "")}`); /* 실제 앱: shell.openExternal(u) */ }
+function toast(msg, ok) {
+  const t = $("#toast"); t.innerHTML = (ok ? `<span style="color:var(--ok)">${ICON.check}</span>` : "") + msg;
+  t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 2400);
+}
+function showDonate() { $("#scrim").classList.add("on"); }
+function hideDonate() { $("#scrim").classList.remove("on"); }
+const ago = d => { if (!d) return ""; const s = Math.round((Date.now() - d) / 1000); return s < 60 ? "방금 전" : `${Math.round(s / 60)}분 전`; };
+
+/* ════════ GitHub 최신 릴리스 자동 조회 ════════ */
+const cleanV = t => t.replace(/^v\.?/i, "");
+const strip = s => s.replace(/\*\*|`/g, "").replace(/\[(.*?)\]\(.*?\)/g, "$1").trim();
+async function syncGitHub() {
+  state.sync = "checking"; renderSyncBadge();
+  let ok = 0;
+  await Promise.all(GAMES.map(async g => {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${CONFIG.github}/${g.repo}/releases?per_page=5`);
+      if (!r.ok) return;
+      const rel = (await r.json()).filter(x => !x.prerelease && !x.draft);
+      if (!rel.length) return;
+      ok++;
+      g.latest = cleanV(rel[0].tag_name);
+      g.date = rel[0].published_at.slice(0, 10);
+      g.download = rel[0].html_url;
+      const live = rel.slice(0, 3).map(x => ({
+        v: cleanV(x.tag_name), d: x.published_at.slice(0, 10),
+        items: (x.body || "").split(/\r?\n/).filter(l => /^\s*[-*] /.test(l)).map(l => strip(l.replace(/^\s*[-*] /, ""))).filter(l => l.length > 3 && l.length < 120).slice(0, 3)
+      }));
+      // 런처에 정리해 둔 노트가 있으면 우선, 새 릴리스만 GitHub 본문에서 가져옴
+      g.notes = live.map(n => g.notes.find(o => o.v === n.v) || (n.items.length ? n : { ...n, items: ["상세 내용은 GitHub 릴리스를 확인해 주세요."] }));
+    } catch (e) { /* 오프라인: 저장된 값 사용 */ }
+  }));
+  GAMES.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "tool" ? 1 : -1) || b.date.localeCompare(a.date));
+  state.sync = ok ? "ok" : "offline"; state.syncedAt = Date.now();
+  render();
+}
+function renderSyncBadge() {
+  const el = $("#syncMeta"); if (!el) return;
+  el.innerHTML = state.sync === "checking" ? `<span class="dot warn pulse"></span>GitHub 확인 중`
+    : state.sync === "ok" ? `<span class="dot"></span>GitHub 동기화 · ${ago(state.syncedAt)}`
+    : `<span class="dot off"></span>오프라인 · 마지막 확인값 표시`;
+}
+
+/* ════════ 렌더 ════════ */
+function sideItem(g) {
+  const s = status(g);
+  const sub = s.key === "update" ? `<span class="dot warn"></span><span class="warn-t">업데이트 ${g.latest}</span>`
+            : s.key === "new" ? `<span class="dot off"></span>v${g.latest}${isNew(g) ? ' <span class="new">NEW</span>' : ""}`
+            : `<span class="dot"></span>v${g.installed} 설치됨`;
+  return `<button class="gitem ${state.view === g.id ? "on" : ""}" onclick="go('${g.id}')" title="${g.name}">
+    <span class="gthumb" style="${bg(g, "thumb")}">${glyph(g, "s")}</span>
+    <span class="gmeta"><div class="gname">${g.name}</div><div class="gsub num">${sub}</div></span></button>`;
+}
+function renderSide() {
+  const patches = GAMES.filter(g => !isTool(g)), tools = GAMES.filter(isTool);
+  $("#navHome").classList.toggle("on", state.view === "home");
+  $("#sideList").innerHTML =
+    `<div class="sec">한글패치 <em class="num">${patches.length}</em></div>` + patches.map(sideItem).join("") +
+    (tools.length ? `<div class="sec">VR 도구 <em class="num">${tools.length}</em></div>` + tools.map(sideItem).join("") : "");
+}
+
+function gameCard(g) {
+  const s = status(g);
+  const foot = s.key === "update" ? `v${g.installed} → <b style="color:var(--accent)">${g.latest}</b>`
+    : s.key === "ok" ? `설치됨 · v${g.installed}` : `v${g.latest} · ${g.date.slice(5).replace("-", ".")} 배포`;
+  return `<article class="card" onclick="go('${g.id}')">
+    <div class="cover" style="${bg(g)}">${glyph(g, "l")}<div class="plat"><span class="tag">${g.platform}</span>${isNew(g) ? '<span class="tag new-tag">NEW</span>' : ""}</div></div>
+    <div class="card-body">
+      <h3>${g.name}</h3><div class="sub">${g.sub}</div>
+      <div class="card-foot">
+        <div class="status num"><span class="dot ${s.dot}"></span>${foot}</div>
+        <button class="mini ${s.key === "update" ? "acc" : ""}" onclick="event.stopPropagation();${s.key === "ok" ? `launch('${g.id}')` : `go('${g.id}')`}">${s.action}</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderHome() {
+  const patches = GAMES.filter(g => !isTool(g));
+  const ups = GAMES.filter(g => status(g).key === "update");
+  const inst = GAMES.filter(g => g.installed).length;
+  const list = patches.filter(g => platMatch(g, state.filter));
+  const tools = GAMES.filter(g => isTool(g) && platMatch(g, state.filter));
+  return `<div class="page">
+    <div class="head-row">
+      <div><div class="eyebrow">ZECOLE KOREAN PATCH</div><h1>한글패치 라이브러리</h1>
+        <p class="lede num">${patches.length}개 게임 · 설치 ${inst} · ${ups.length ? `<span style="color:var(--accent)">업데이트 ${ups.length}건</span>` : "모두 최신 상태"}</p></div>
+      <div class="seg">${[["all", "전체"], ["installed", "설치됨"], ["pc", "PC VR"], ["quest", "Quest"]].map(([k, l]) =>
+        `<button class="${state.filter === k ? "on" : ""}" onclick="state.filter='${k}';render()">${l}</button>`).join("")}</div>
+    </div>
+    ${ups.length ? `<div class="alert">${ICON.info.replace('stroke="currentColor"', 'stroke="var(--accent)"')}
+      <p><b>${ups.map(g => g.name).join(", ")}</b> 한글패치 새 버전이 나왔습니다.</p>
+      <button class="mini acc" onclick="go('${ups[0].id}')">확인하기</button></div>` : ""}
+    <div class="grid">
+      ${list.map(gameCard).join("") || `<div class="empty">조건에 맞는 한글패치가 없습니다.</div>`}
+      ${state.filter === "all" ? `<article class="card ghost" onclick="openUrl(CONFIG.request)">
+        <div><div class="plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <b style="color:var(--text)">다음 한글패치 요청</b><div style="font-size:12.5px;margin-top:4px">원하는 게임을 알려주세요</div></div>
+      </article>` : ""}
+    </div>
+    ${tools.length ? `<div class="sub-h"><h2>VR 도구</h2><span>한글패치 외에 제콜이 만든 앱</span></div>
+      <div class="tools">${tools.map(g => `<div class="panel promo" onclick="go('${g.id}')">
+        <div class="promo-ic" style="${bg(g, "thumb")};font-weight:900;font-size:12px;color:#d9ccff">${g.glyph || ""}</div>
+        <div><h3>${g.name} <span class="pill off num" style="margin-left:4px">v${g.latest}</span></h3><p>${g.sub} · ${g.platform}</p></div>
+        <span class="arr">→</span></div>`).join("")}</div>` : ""}
+
+    <section class="channel">
+      <div class="panel">
+        <div class="panel-h"><h2><svg width="20" height="20" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="5" fill="var(--yt)"/><path d="M10 8.5v7l6-3.5z" fill="#fff"/></svg>제콜 채널 최신 영상</h2>
+          <a class="link" href="#" onclick="openUrl(CONFIG.youtube);return false">채널 바로가기 ${ICON.ext}</a></div>
+        <div class="vids">${VIDEOS.map(v => `
+          <div class="vid" onclick="openUrl('https://youtu.be/${v.id}')">
+            <div class="vthumb" style="background-image:url('https://i.ytimg.com/vi/${v.id}/mqdefault.jpg')"><div class="vplay"><svg width="34" height="34" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,.6)"/><path d="M10 8v8l6-4z" fill="#fff"/></svg></div></div>
+            <div class="vt">${v.title}</div><div class="vg">${v.game}</div>
+          </div>`).join("")}</div>
+      </div>
+      <div class="stack">
+        <div class="panel promo" onclick="openUrl(CONFIG.web)">
+          <div class="promo-ic" style="background:var(--accent-soft);color:var(--accent)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg></div>
+          <div><h3>zecole.store</h3><p>메타 퀘스트 게임 정보, 할인 소식, 한글 지원 여부를 한곳에서.</p></div>
+          <span class="arr">${ICON.ext}</span>
+        </div>
+        <div class="panel promo" onclick="openUrl('https://github.com/' + CONFIG.github)">
+          <div class="promo-ic" style="background:var(--surface-3);color:var(--text)">${ICON.gh.replace(/14/g, "22")}</div>
+          <div><h3>GitHub · ${CONFIG.github}</h3><p>모든 패치의 원본 파일, 릴리스, 오역 제보.</p></div>
+          <span class="arr">${ICON.ext}</span>
+        </div>
+        <div class="panel promo" onclick="showDonate()">
+          <div class="promo-ic" style="background:rgba(232,102,122,.12);color:var(--err)"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.4 3 5 6.4 5c2 0 3.3 1 5.6 3.3C14.3 6 15.6 5 17.6 5 21 5 23 8.4 21.6 11.7 19.5 16.4 12 21 12 21z"/></svg></div>
+          <div><h3>한글패치 제작 후원</h3><p>모든 패치는 무료입니다. 다음 게임 작업에 힘을 보태주세요.</p></div>
+          <span class="arr">→</span>
+        </div>
+      </div>
+    </section>
+  </div>`;
+}
+
+function targetCell(g) {
+  const pc = g.both ? g.target === "pc" : !!g.path && !g.device;
+  const seg = g.both ? `<div class="seg mini-seg">${[["pc", "PC VR"], ["quest", "Quest"]].map(([k, l]) =>
+    `<button class="${g.target === k ? "on" : ""}" onclick="GAMES.find(x=>x.id==='${g.id}').target='${k}';render()">${l}</button>`).join("")}</div>` : "";
+  if (pc) return `<div class="fact-l">게임 폴더 ${seg || '<span class="pill ok">자동 탐지</span>'}</div>
+    <div class="path"><code title="${g.path}">${g.path}</code><button onclick="toast('폴더 선택 창을 엽니다')">변경</button></div>`;
+  return `<div class="fact-l">설치 대상 ${seg || `<span class="pill ${g.device.connected ? "ok" : "off"}">${g.device.connected ? "연결됨" : "대기"}</span>`}</div>
+    <div class="fact-v" style="font-size:17px">${g.device.name}</div><div class="fact-s">USB 연결됨 · 저장공간 충분</div>`;
+}
+
+function renderDetail(g) {
+  const s = status(g), busy = state.busy && state.busy.id === g.id, tool = isTool(g);
+  const what = tool ? "앱" : "한글패치";
+  const cls = busy ? "busy" : s.key === "ok" ? "play" : "";
+  const quest = g.device && (!g.both || g.target === "quest");
+  const label = busy ? `<div class="bar" style="width:${state.busy.pct}%"></div><span class="num">${state.busy.step} · ${Math.floor(state.busy.pct)}%</span>`
+    : s.key === "ok" ? `${ICON.play}<span>${tool ? "앱 실행" : "게임 실행"}</span>`
+    : `${ICON.down}<span>${what} ${s.key === "update" ? "업데이트" : "설치"} <small class="num">v${g.latest}</small></span>`;
+  const note = busy ? `<span class="dot warn"></span>설치 중에는 런처를 닫지 마세요${quest ? " · USB 케이블 연결 유지" : ""}.`
+    : s.key === "ok" ? `<span class="dot"></span><b>준비 완료</b> · GitHub 최신 버전 확인 ${ago(state.syncedAt) || "중"} <button class="link" onclick="syncGitHub()" style="margin-left:4px">${ICON.refresh} 다시 확인</button>`
+    : `<span class="dot ${s.dot}"></span><b>${g.installed ? `v${g.installed} → v${g.latest}` : "아직 설치되지 않음"}</b> · GitHub 릴리스 ${g.date}${quest ? ` · ${g.device.name} 연결됨` : ""}`;
+
+  return `<div style="animation:fade .28s var(--ease)">
+    <div class="hero" style="${bg(g)}">${glyph(g, "xl")}
+      <button class="crumb" onclick="go('home')">${ICON.back}라이브러리</button>
+      <div class="hero-in">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag">${g.platform}</span><span class="tag">${g.store}</span>
+          ${quest ? `<span class="device"><span class="dot ${g.device.connected ? "" : "err"}"></span>${g.device.name} ${g.device.connected ? "연결됨" : "연결 안 됨"}</span>` : ""}
+        </div>
+        <h1>${g.name}</h1><p class="lede">${g.sub}${tool ? "" : " 한국어 패치"} · 제작 제콜</p>
+      </div>
+    </div>
+    <div class="dpage">
+      <div class="actionbar">
+        <button class="primary ${cls}" onclick="primary('${g.id}')" ${busy ? "disabled" : ""}>${label}</button>
+        ${g.path && !quest ? `<button class="sec-btn" onclick="toast('게임 폴더를 엽니다')">${ICON.folder}폴더 열기</button>` : ""}
+        <button class="sec-btn" onclick="uninstall('${g.id}')" ${!g.installed || busy ? 'disabled style="opacity:.4;cursor:default"' : ""}>${ICON.undo}${tool ? "삭제" : "제거 · 원본 복구"}</button>
+      </div>
+      <div class="act-note num">${note}</div>
+
+      <div class="facts">
+        <div class="fact">
+          <div class="fact-l">${what} <span class="pill ${s.key === "ok" ? "ok" : s.key === "update" ? "warn" : "off"}">${s.label}</span></div>
+          <div class="fact-v num">${g.installed ? "v" + g.installed : "—"}</div>
+          <div class="fact-s num">최신 배포 v${g.latest} · ${g.date}</div>
+        </div>
+        <div class="fact">
+          <div class="fact-l">${g.dep.label} ${g.dep.ok ? '<span class="pill ok">대응</span>' : ""}</div>
+          <div class="fact-v num">${g.dep.value}</div>
+          <div class="fact-s">${g.dep.note}</div>
+        </div>
+        <div class="fact">${targetCell(g)}</div>
+      </div>
+
+      <div class="cols">
+        <div class="panel">
+          <div class="panel-h"><h2>패치노트</h2><a class="link" href="#" onclick="openUrl('${repoUrl(g)}/releases');return false">전체 릴리스 · GitHub ${ICON.ext}</a></div>
+          <ul class="notes">${g.notes.map((n, i) => `<li class="note ${i === 0 ? "cur" : ""}">
+            <div class="note-h num"><b>v${n.v}</b><span>${n.d}</span>${n.v === g.installed ? '<span class="pill off">설치됨</span>' : ""}</div>
+            <ul>${n.items.map(x => `<li>${x}</li>`).join("")}</ul></li>`).join("")}</ul>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><h2>알아둘 점</h2></div>
+          <ul class="tips">${g.tips.map(t => `<li>${ICON.info}<span>${t}</span></li>`).join("")}</ul>
+          <div class="res">
+            <a href="#" onclick="openUrl('${repoUrl(g)}');return false"><span style="display:flex;align-items:center;gap:8px">${ICON.gh}${g.repo}</span>${ICON.ext}</a>
+            <a href="#" onclick="openUrl('${repoUrl(g)}/issues');return false">오역 제보 · 수정 요청 ${ICON.ext}</a>
+            <a href="#" onclick="showDonate();return false">도움이 됐다면 후원하기 <span>→</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function render() {
+  renderSide(); renderSyncBadge();
+  const g = GAMES.find(x => x.id === state.view);
+  $("#main").innerHTML = g ? renderDetail(g) : renderHome();
+}
+
+/* ════════ 동작 (실제 앱에서는 설치 백엔드 호출로 교체) ════════ */
+function launch(id) { const g = GAMES.find(x => x.id === id); toast(`${g.name} 실행을 요청했습니다`, true); }
+function primary(id) {
+  const g = GAMES.find(x => x.id === id), s = status(g);
+  if (state.busy) return;
+  if (s.key === "ok") return launch(id);
+  const quest = g.device && (!g.both || g.target === "quest");
+  const steps = [[0, "GitHub에서 받는 중"], [55, "파일 검증 중"], [75, quest ? "Quest에 설치 중" : "설치 중"], [95, "마무리 중"]];
+  state.busy = { id, pct: 0, step: steps[0][1] };
+  const t = setInterval(() => {
+    state.busy.pct = Math.min(100, state.busy.pct + 2.2 + Math.random() * 2.6);
+    state.busy.step = steps.filter(x => state.busy.pct >= x[0]).pop()[1];
+    if (state.busy.pct >= 100) { clearInterval(t); state.busy = null; g.installed = g.latest; toast(`${g.name} v${g.latest} 설치 완료`, true); }
+    render();
+  }, 110);
+  render();
+}
+function uninstall(id) {
+  const g = GAMES.find(x => x.id === id);
+  if (!g.installed || state.busy) return;
+  if (!confirm(`${g.name}${isTool(g) ? "을(를) 삭제할까요?" : " 한글패치를 제거하고 원본 파일로 복구할까요?"}`)) return;
+  g.installed = null; render(); toast(isTool(g) ? "삭제했습니다" : "원본 파일로 복구했습니다", true);
+}
+addEventListener("keydown", e => { if (e.key === "Escape") { hideDonate(); if (state.view !== "home") go("home"); } });
+setInterval(renderSyncBadge, 30000);
+
+render();
+syncGitHub();
+</script>
+</body>
+</html>

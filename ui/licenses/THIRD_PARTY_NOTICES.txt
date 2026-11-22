@@ -1,0 +1,76 @@
+ZECOLE 통합 런처 — 제3자 구성 요소 고지 (Third-Party Notices)
+=====================================================================
+
+ZECOLE 통합 런처 자체 코드는 MIT 라이선스입니다 (저장소의 LICENSE).
+아래 구성 요소는 각 권리자의 라이선스를 따르며, 원문은 이 폴더(licenses)에 함께 들어 있습니다.
+
+---------------------------------------------------------------------
+1. 런처 실행 파일(ZECOLE_Launcher.exe)에 포함된 구성 요소
+---------------------------------------------------------------------
+
+[Microsoft Edge WebView2 SDK] 1.0.4314.35
+  - 포함 파일: Microsoft.Web.WebView2.Core.dll, Microsoft.Web.WebView2.WinForms.dll,
+    WebView2Loader.dll (x64)
+  - 라이선스: BSD 3-Clause — Copyright (C) Microsoft Corporation
+  - 원문: WebView2-LICENSE.txt, WebView2-NOTICE.txt
+  - 출처: https://www.nuget.org/packages/Microsoft.Web.WebView2/1.0.4314.35
+  - WebView2 런타임 자체는 포함하지 않습니다(Windows 기본 제공 또는 Microsoft에서 설치).
+
+[SharpZipLib] 1.3.3
+  - 포함 파일: ICSharpCode.SharpZipLib.dll
+  - 라이선스: MIT — Copyright © 2000-2018 SharpZipLib Contributors
+  - 원문: SharpZipLib-LICENSE.txt
+  - 출처: https://github.com/icsharpcode/SharpZipLib
+
+[zlib] 1.2.13
+  - 포함 파일: zecole_zlib.dll (공식 zlib 1.2.13 소스를 수정 없이 빌드 + 런처용 래퍼)
+  - 라이선스: zlib License — (C) 1995-2022 Jean-loup Gailly and Mark Adler
+  - 원문: zlib-LICENSE.txt
+  - 출처: https://zlib.net/fossils/zlib-1.2.13.tar.gz
+
+[bsdiff / BSDIFF40 형식]
+  - 런처는 BSDIFF40 형식 차분을 적용하는 코드를 직접 작성했습니다(src/Quest/Bspatch.cs).
+    원본 코드를 복사하지 않았으며, 형식과 알고리즘을 만든 Colin Percival을 밝히기 위해 고지합니다.
+  - 라이선스: BSD 2-Clause — Copyright 2003-2005 Colin Percival
+  - 원문: bsdiff-LICENSE.txt
+
+[H3VR2 키 아트] img/h3vr2-keyart.jpg
+  - © 2026 RUST LLC. — Hot Dogs, Horseshoes & Hand Grenades 2 공식 프레스킷
+    (https://press.rustltd.com/h3vr2) 의 key art 를 크기만 줄여 사용했습니다.
+  - 런처의 MIT 라이선스는 이 이미지에 적용되지 않습니다.
+
+---------------------------------------------------------------------
+2. 런처에 포함하지 않고, 실행 중에 각 공식 출처에서 받는 것
+---------------------------------------------------------------------
+
+[Android SDK Platform-Tools (ADB)] 37.0.0
+  - 런처는 ADB를 함께 배포하지 않습니다. Quest 연결에 필요할 때 사용자에게 Google의
+    Android SDK 약관(https://developer.android.com/studio/terms)을 보여 주고, 사용자가 동의한
+    경우에만 Google 공식 서버에서 받아 SHA-256을 확인한 뒤 사용합니다.
+    받은 파일과 함께 Google의 NOTICE.txt 가 보관됩니다.
+  - 이미 PC에 있는 ADB(다른 ZECOLE 설치기, SideQuest, Android SDK)가 있으면 그것을 씁니다.
+
+[Meta VR CLI (metavr.exe)]
+  - Meta VR Glasses FoV Tester 의 '다른 게임에 적용' 기능에서만 사용합니다. 함께 배포하지 않으며,
+    사용자 확인 후 Meta 공식 서버에서 받아 Meta가 알려 주는 SHA-256으로 검증합니다.
+  - 이용 약관: https://developers.meta.com/vr/licenses/
+
+[한글패치에 포함된 글꼴]
+  - 나눔고딕 · Pretendard · Noto Sans KR · IBM Plex (모두 SIL Open Font License 1.1)
+  - 저작권 표시와 라이선스 전문: Fonts-OFL.txt
+
+[각 한글패치 · VR 도구 파일]
+  - 런처가 설치하는 한글패치와 도구는 각 GitHub 저장소(github.com/zecole-vr)의 릴리스에서 받으며,
+    번역·글꼴(예: 나눔고딕 OFL) 등은 각 저장소의 라이선스와 고지를 따릅니다.
+
+[Pretendard 글꼴]
+  - 런처 화면이 jsDelivr CDN에서 불러와 표시합니다(파일은 포함하지 않음).
+  - 라이선스: SIL Open Font License 1.1 — https://github.com/orioncactus/pretendard
+
+[게임 이미지 · 영상 썸네일]
+  - Steam 상점 이미지와 YouTube 썸네일은 각 서비스에서 바로 불러와 표시하며 런처에 포함하지 않습니다.
+    게임 이름·로고·이미지는 각 개발사·배급사의 상표 또는 저작물입니다.
+
+---------------------------------------------------------------------
+이 런처와 한글패치는 비공식 팬 제작물이며, 각 게임의 개발사·배급사 및 Meta, Valve, Google,
+Microsoft와 관련이 없습니다.
