@@ -10,7 +10,7 @@ using Microsoft.Web.WebView2.WinForms;
 
 namespace Zecole.Launcher
 {
-    /// <summary>테두리 없는 1180×820 창(화면이 작으면 작업 영역에 맞춰 줄임). 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
+    /// <summary>테두리 없는 1180×820 창. 마우스 위치와 상관없이 항상 주 모니터 가운데에 열고, 크기도 주 모니터 기준으로 정한다. 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
     internal sealed class MainForm : Form
     {
         public const int LogicalWidth = 1180, LogicalHeight = 820;
@@ -23,12 +23,14 @@ namespace Zecole.Launcher
         {
             Text = Program.AppTitle;
             FormBorderStyle = FormBorderStyle.None;
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.Manual;
             BackColor = Color.FromArgb(14, 14, 17);
             MaximizeBox = false;
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
 
             ClientSize = FitSize(DeviceDpi / 96f);
+            var wa = MainArea();
+            Location = new Point(wa.X + Math.Max(0, (wa.Width - Width) / 2), wa.Y + Math.Max(0, (wa.Height - Height) / 2));
 
             _web.Dock = DockStyle.Fill;
             _web.DefaultBackgroundColor = BackColor;
@@ -58,17 +60,21 @@ namespace Zecole.Launcher
             ClientSize = FitSize(e.DeviceDpiNew / 96f);
         }
 
-        /// <summary>기본 크기 × DPI 배율. 모니터 작업 영역(작업 표시줄 제외)보다 크면 그 안에 들어가게 줄인다.</summary>
-        private Size FitSize(float scale)
+        /// <summary>주 모니터의 작업 영역(작업 표시줄 제외).</summary>
+        private static Rectangle MainArea()
+        {
+            try { return (Screen.PrimaryScreen ?? Screen.AllScreens[0]).WorkingArea; }
+            catch { return new Rectangle(0, 0, 1920, 1040); }
+        }
+
+        /// <summary>기본 크기 × DPI 배율. 주 모니터 작업 영역보다 크면 그 안에 들어가게 줄인다.
+        /// 어느 모니터로 옮겨도 같은 크기를 유지하도록 항상 주 모니터만 기준으로 삼는다.</summary>
+        private static Size FitSize(float scale)
         {
             int w = (int)(LogicalWidth * scale), h = (int)(LogicalHeight * scale);
-            try
-            {
-                var wa = IsHandleCreated ? Screen.FromHandle(Handle).WorkingArea : Screen.FromPoint(Cursor.Position).WorkingArea;
-                w = Math.Min(w, wa.Width - 24);
-                h = Math.Min(h, wa.Height - 24);
-            }
-            catch { }
+            var wa = MainArea();
+            w = Math.Min(w, wa.Width - 24);
+            h = Math.Min(h, wa.Height - 24);
             return new Size(Math.Max(w, 640), Math.Max(h, 480));
         }
 
