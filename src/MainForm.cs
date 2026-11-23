@@ -10,7 +10,7 @@ using Microsoft.Web.WebView2.WinForms;
 
 namespace Zecole.Launcher
 {
-    /// <summary>테두리 없는 1180×820 창. 마우스 위치와 상관없이 항상 주 모니터 가운데에 열고, 크기도 주 모니터 기준으로 정한다. 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
+    /// <summary>테두리 없는 1180×820 창. 마지막으로 닫은 위치에 다시 열고, 기억한 위치가 없거나 그 모니터가 없어졌으면 주 모니터 가운데에 연다. 크기는 주 모니터 기준. 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
     internal sealed class MainForm : Form
     {
         public const int LogicalWidth = 1180, LogicalHeight = 820;
@@ -29,8 +29,7 @@ namespace Zecole.Launcher
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
 
             ClientSize = FitSize(DeviceDpi / 96f);
-            var wa = MainArea();
-            Location = new Point(wa.X + Math.Max(0, (wa.Width - Width) / 2), wa.Y + Math.Max(0, (wa.Height - Height) / 2));
+            Location = SavedLocation(Size) ?? CenterOnMain(Size);
 
             _web.Dock = DockStyle.Fill;
             _web.DefaultBackgroundColor = BackColor;
@@ -58,6 +57,48 @@ namespace Zecole.Launcher
         {
             base.OnDpiChanged(e);
             ClientSize = FitSize(e.DeviceDpiNew / 96f);
+        }
+
+        private static readonly string WindowFile = Path.Combine(Program.DataDir, "window-position.txt");
+
+        private static Point CenterOnMain(Size size)
+        {
+            var wa = MainArea();
+            return new Point(wa.X + Math.Max(0, (wa.Width - size.Width) / 2), wa.Y + Math.Max(0, (wa.Height - size.Height) / 2));
+        }
+
+        /// <summary>지난번에 닫은 위치. 창 윗부분(끌어서 옮기는 곳)이 지금 연결된 어느 모니터에든 충분히 보일 때만 쓴다.
+        /// 모니터를 빼거나 배치를 바꿔 화면 밖이 되면 null을 돌려 주 모니터 가운데에 연다.</summary>
+        private static Point? SavedLocation(Size size)
+        {
+            try
+            {
+                if (!File.Exists(WindowFile)) return null;
+                var v = File.ReadAllText(WindowFile).Trim().Split(',');
+                if (v.Length != 2 || !int.TryParse(v[0], out var x) || !int.TryParse(v[1], out var y)) return null;
+                var top = new Rectangle(x, y, size.Width, 48);
+                foreach (var sc in Screen.AllScreens)
+                {
+                    var hit = Rectangle.Intersect(sc.WorkingArea, top);
+                    if (hit.Width >= 160 && hit.Height >= 24) return new Point(x, y);
+                }
+            }
+            catch (Exception ex) { Log.Info("창 위치 불러오기 실패: " + ex.Message); }
+            return null;
+        }
+
+        /// <summary>창을 닫을 때 위치를 기억한다(최소화 상태면 최소화 전 위치).</summary>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (e.Cancel) return;
+            try
+            {
+                var at = WindowState == FormWindowState.Normal ? Location : RestoreBounds.Location;
+                Directory.CreateDirectory(Program.DataDir);
+                File.WriteAllText(WindowFile, at.X + "," + at.Y);
+            }
+            catch (Exception ex) { Log.Info("창 위치 저장 실패: " + ex.Message); }
         }
 
         /// <summary>주 모니터의 작업 영역(작업 표시줄 제외).</summary>
