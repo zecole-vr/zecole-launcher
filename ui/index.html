@@ -708,7 +708,7 @@ function renderHome() {
       <div class="vids">${VIDEOS.slice(0, 4).map(videoCard).join("") || `<div class="empty" style="grid-column:1/-1;padding:24px">영상을 불러오는 중이거나 오프라인입니다.</div>`}</div>
     </section>
     ${STORE_NEW ? `<section class="panel">
-      <div class="panel-h"><h2>${ICON.globe}zecole.store 신규출시 VR 게임</h2><button class="link" onclick="openUrl('${esc(STORE_NEW.list)}')">전체 보기 ${ICON.ext}</button></div>
+      <div class="panel-h"><h2>${ICON.globe}메타스토어 신규출시 VR 게임</h2><button class="link" onclick="openUrl('${esc(STORE_NEW.list)}')">전체 보기 ${ICON.ext}</button></div>
       <div class="sgrid">${STORE_NEW.items.map(storeCard).join("")}</div>
     </section>` : `<div class="grid">
       ${list.map(gameCard).join("") || `<div class="empty">조건에 맞는 한글패치가 없습니다.</div>`}
