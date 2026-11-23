@@ -154,6 +154,19 @@ h1{font-size:25px;letter-spacing:-.02em;margin:4px 0 2px;font-weight:800}
 .channel{margin:0 0 18px}
 .vids{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .vid{cursor:pointer;text-align:left}
+/* ── zecole.store 신규출시 카드 ── */
+.sgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.sgame{display:flex;flex-direction:column;text-align:left;border-radius:var(--r);overflow:hidden;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);cursor:pointer}
+.sgame:hover{box-shadow:inset 0 0 0 1px var(--accent)}
+.sgame .sthumb{aspect-ratio:16/9;background:var(--surface-3) center/cover;position:relative}
+.sgame .sthumb .off{position:absolute;left:8px;top:8px;height:20px;padding:0 6px;border-radius:5px;display:flex;align-items:center;font-size:11px;font-weight:800;background:var(--accent);color:var(--accent-ink)}
+.sgame .sbody{padding:9px 11px 11px;display:flex;flex-direction:column;gap:3px;flex:1}
+.sgame .sname{font-size:13px;font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}
+.sgame .smeta{font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.sgame .sprice{margin-top:auto;padding-top:4px;display:flex;align-items:baseline;gap:6px;font-family:"Pretendard","Malgun Gothic",sans-serif}
+.sgame .sprice b{font-size:13.5px;font-weight:800}
+.sgame .sprice s{font-size:11.5px;color:var(--faint)}
+.sgame .sprice .free{color:var(--ok)}
 .vthumb{aspect-ratio:16/9;border-radius:9px;background:var(--surface-3) center/cover;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
 .vplay{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transition:opacity .2s;background:rgba(0,0,0,.25)}
 .vid:hover .vplay{opacity:1}
@@ -339,6 +352,7 @@ let ITEMS = [];               // 게임/모드 목록
 let SUBS = [];                // 목록에 따로 보이지 않는 하위 판 (예: A Fisherman's Tale Quest판)
 const byId = id => ITEMS.find(x => x.id === id) || SUBS.find(x => x.id === id);
 const setItems = list => { ITEMS = list; SUBS = list.flatMap(i => i.subs || []); };
+let STORE_NEW = null;          // zecole.store 신규출시 게임 (null = 아직 모름/실패)
 let VIDEOS = [];              // 유튜브 최신 영상
 let STEAM = {};               // 이 PC 의 Steam 게임
 const S = { q: {}, qprog: {}, qbusy: null, view: "home", filter: store("filter") || "all", busy: null, sync: "checking", syncedAt: null, info: {}, welcome: null, update: null, hintDone: false };
@@ -639,6 +653,33 @@ function videoCard(v) {
     <div class="vt">${esc(v.title.split("|")[0])}</div><div class="vg">${esc((v.title.split("|")[1] || "").trim() || fmtDate(v.published))}</div></button>`;
 }
 
+/* zecole.store 신규출시: 스토어 주소만 열고, 값은 모두 글자로만 넣는다 */
+function cleanStoreGames(d) {
+  const okUrl = u => typeof u === "string" && /^https:\/\/(www\.)?zecole\.store\//.test(u);
+  const okImg = u => typeof u === "string" && /^https:\/\/[^\s'"()]+$/.test(u);
+  const items = (d && Array.isArray(d.items) ? d.items : []).filter(g => g && g.name && okUrl(g.url)).slice(0, 8)
+    .map(g => ({ name: String(g.name), url: g.url, image: okImg(g.image) ? g.image : "", date: g.releaseDate || "",
+      price: g.priceLabel || "", orig: g.originalPriceLabel || "", off: Number(g.discountPercent) || 0,
+      rating: Number(g.rating) || 0, reviews: Number(g.reviewCount) || 0 }));
+  return items.length ? { items, list: okUrl(d.listUrl) ? d.listUrl : (C.links.web || "https://zecole.store") } : null;
+}
+function storeCard(g) {
+  const price = g.price ? `<b class="${g.price === "무료" ? "free" : ""}">${esc(g.price)}</b>${g.orig ? `<s>${esc(g.orig)}</s>` : ""}` : `<span style="color:var(--muted);font-size:12px">가격 확인</span>`;
+  return `<button class="sgame" onclick="openUrl('${esc(g.url)}')">
+    <div class="sthumb" style="${g.image ? `background-image:url('${esc(g.image)}')` : ""}">${g.off ? `<span class="off">-${g.off}%</span>` : ""}</div>
+    <div class="sbody"><div class="sname">${esc(g.name)}</div>
+      <div class="smeta">${g.date ? `<span>${esc(g.date.replace(/-/g, "."))} 출시</span>` : ""}${g.rating ? `<span>★ ${g.rating.toFixed(1)}${g.reviews ? ` (${g.reviews.toLocaleString()})` : ""}</span>` : ""}</div>
+      <div class="sprice">${price}</div></div></button>`;
+}
+async function loadStoreNew() {
+  const url = C.links?.storeNewGames; if (!url) return;
+  try {
+    const r = await host("net.get", { url, maxAgeSec: 1800 });
+    STORE_NEW = r && r.status === 200 && r.body ? cleanStoreGames(JSON.parse(r.body)) : null;
+  } catch (e) { STORE_NEW = null; }
+  render();
+}
+
 function renderHome() {
   const patches = ITEMS.filter(isPatch), extras = ITEMS.filter(g => !isPatch(g));
   const ups = ITEMS.filter(g => stat(g).key === "update");
@@ -652,8 +693,8 @@ function renderHome() {
     <div class="head-row">
       <div><div class="eyebrow">ZECOLE LAUNCHER</div><h1>라이브러리</h1>
         <p class="lede num">${patches.length}개 게임 한글패치${extras.length ? ` · 모드·도구 ${extras.length}개` : ""} · 이 PC 설치 ${inst}${ups.length ? ` · <span style="color:var(--accent)">업데이트 ${ups.length}건</span>` : ""}</p></div>
-      <div class="seg">${[["all", "전체"], ["installed", "설치됨"], ["pc", "PC VR"], ["quest", "Quest"]].map(([k, l]) =>
-        `<button class="${S.filter === k ? "on" : ""}" onclick="S.filter='${k}';store('filter','${k}');render()">${l}</button>`).join("")}</div>
+      ${STORE_NEW ? "" : `<div class="seg">${[["all", "전체"], ["installed", "설치됨"], ["pc", "PC VR"], ["quest", "Quest"]].map(([k, l]) =>
+        `<button class="${S.filter === k ? "on" : ""}" onclick="S.filter='${k}';store('filter','${k}');render()">${l}</button>`).join("")}</div>`}
     </div>
     ${notice ? `<div class="alert blue">${ICON.info}<p>${esc(notice.text)}</p>${notice.url ? `<button class="mini" onclick="openUrl('${esc(notice.url)}')">자세히</button>` : ""}<button class="x" onclick="store('noticeX','${esc(notice.id)}');render()">${ICON.x}</button></div>` : ""}
     ${ups.length ? `<div class="alert">${ICON.info.replace('stroke="currentColor"', 'stroke="var(--accent)"')}
@@ -666,10 +707,13 @@ function renderHome() {
       <div class="panel-h"><h2>${ICON.yt.replace(/16/g, "20")}제콜 채널 최신 영상</h2><button class="link" onclick="openUrl(C.youtube.url)">채널 구독하기 ${ICON.ext}</button></div>
       <div class="vids">${VIDEOS.slice(0, 4).map(videoCard).join("") || `<div class="empty" style="grid-column:1/-1;padding:24px">영상을 불러오는 중이거나 오프라인입니다.</div>`}</div>
     </section>
-    <div class="grid">
+    ${STORE_NEW ? `<section class="panel">
+      <div class="panel-h"><h2>${ICON.globe}zecole.store 신규출시 VR 게임</h2><button class="link" onclick="openUrl('${esc(STORE_NEW.list)}')">전체 보기 ${ICON.ext}</button></div>
+      <div class="sgrid">${STORE_NEW.items.map(storeCard).join("")}</div>
+    </section>` : `<div class="grid">
       ${list.map(gameCard).join("") || `<div class="empty">조건에 맞는 한글패치가 없습니다.</div>`}
-    </div>
-    ${ex.length ? `<div class="sub-h"><h2>VR 모드 · 도구</h2><span>한글패치 외에 제콜이 만든 것들</span></div>
+    </div>`}
+    ${!STORE_NEW && ex.length ? `<div class="sub-h"><h2>VR 모드 · 도구</h2><span>한글패치 외에 제콜이 만든 것들</span></div>
       <div class="tools">${ex.map(g => `<button class="panel promo" onclick="go('${g.id}')">
         <span class="pic" style="${bgImg(g.thumbList, g.tint)};font-weight:900;font-size:12px;color:#d9ccff">${g.thumbList.length ? "" : esc(g.glyph || g.name[0])}</span>
         <span><h3>${esc(g.name)} <span class="pill off num" style="margin-left:4px">v${esc(g.latest || "-")}</span></h3><p>${esc(g.sub)} · ${platLabel(g)}</p></span>
@@ -1279,6 +1323,7 @@ addEventListener("keydown", e => { if (e.key === "Escape") { if ($("#scrim").cla
   render();
   if (S.info.startHint && !S.hintDone) { S.hintDone = true; openHint(S.info.startHint); }
   host("youtube.feed", { channelId: C.youtube.channelId }).then(v => { VIDEOS = v || []; render(); }).catch(() => { });
+  loadStoreNew();
   checkLauncherUpdate();
   setInterval(async () => { if (!S.busy) { await refreshStatus(); render(); } }, 60000);
 })();

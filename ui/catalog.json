@@ -16,6 +16,7 @@
     "web": "https://zecole.store",
     "request": "https://zecole.store",
     "github": "https://github.com/zecole-vr",
+    "storeNewGames": "https://zecole.store/api/launcher/new-games",
     "donate": {
       "membership": "https://www.youtube.com/@zecole/join"
     }
