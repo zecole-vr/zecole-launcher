@@ -38,14 +38,24 @@
     },
     {
       "id": "game-discount",
-      "tag": "제콜스토어",
-      "title": "메타스토어 게임 10% 할인",
+      "tag": "제콜스토어 · META 공식 제휴",
+      "title": "메타스토어 구매 할인",
+      "deals": [
+        {
+          "pct": "10%",
+          "label": "유료 게임 구매"
+        },
+        {
+          "pct": "50%",
+          "label": "무료 게임 첫 인앱결제",
+          "note": "DLC 포함"
+        }
+      ],
       "points": [
-        "Meta 공식 제휴 혜택",
         "구매할 때 ZECOLE 코드 입력"
       ],
       "code": "ZECOLE",
-      "body": "Meta 공식 제휴 혜택 · 메타스토어 게임 구매 시 ZECOLE 코드를 쓰면 10% 할인됩니다.",
+      "body": "Meta 공식 제휴 혜택 · 유료 게임은 10%, 무료 게임은 첫 인앱결제(DLC 포함) 50% 할인. 구매할 때 ZECOLE 코드를 입력하세요.",
       "cta": "할인 받기",
       "url": "https://zecole.store",
       "accent": "#e6a96e"
