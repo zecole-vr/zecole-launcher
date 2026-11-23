@@ -10,10 +10,10 @@ using Microsoft.Web.WebView2.WinForms;
 
 namespace Zecole.Launcher
 {
-    /// <summary>테두리 없는 1180×820 창. 마지막으로 닫은 위치에 다시 열고, 기억한 위치가 없거나 그 모니터가 없어졌으면 주 모니터 가운데에 연다. 크기는 주 모니터 기준. 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
+    /// <summary>테두리 없는 1460×820 창(왼쪽 목록 · 본문 · 오른쪽 혜택 칸). 마지막으로 닫은 위치에 다시 열고, 기억한 위치가 없거나 그 모니터가 없어졌으면 주 모니터 가운데에 연다. 크기는 주 모니터 기준. 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
     internal sealed class MainForm : Form
     {
-        public const int LogicalWidth = 1180, LogicalHeight = 820;
+        public const int LogicalWidth = 1460, LogicalHeight = 820;
         private const string Host = "app.zecole.local";
 
         private readonly WebView2 _web = new WebView2();

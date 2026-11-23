@@ -29,7 +29,7 @@ a{color:inherit;text-decoration:none}
 /* 브라우저 미리보기에서만 창처럼 띄움. 런처 안에서는 창 전체를 채움 */
 body.preview{display:grid;place-items:center;background:#08080a radial-gradient(ellipse at 30% 20%,#1a1712 0,transparent 60%)}
 .app{width:100vw;height:100vh;display:grid;grid-template-rows:40px 1fr;background:var(--bg);overflow:hidden}
-body.preview .app{width:min(1180px,100vw);height:min(820px,100vh);border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,.09),0 30px 90px rgba(0,0,0,.6)}
+body.preview .app{width:min(1460px,100vw);height:min(820px,100vh);border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,.09),0 30px 90px rgba(0,0,0,.6)}
 
 /* ── 제목 줄 ── */
 .titlebar{display:flex;align-items:center;gap:10px;padding-left:16px;background:var(--bg);border-bottom:1px solid var(--line)}
@@ -48,7 +48,19 @@ body.preview .app{width:min(1180px,100vw);height:min(820px,100vh);border-radius:
 .dot.warn{background:var(--accent)} .dot.off{background:var(--faint)} .dot.err{background:var(--err)} .dot.blue{background:var(--blue)}
 .pulse{animation:pulse 1s ease-in-out infinite alternate}@keyframes pulse{from{opacity:.35}to{opacity:1}}
 
-.body{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:0}
+.body{display:grid;grid-template-columns:240px minmax(0,1fr) 280px;min-height:0}
+/* ── 오른쪽 칸: 혜택 · 링크 ── */
+.rail{background:var(--bg-2);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.rail-scroll{flex:1;overflow:auto;padding:14px 12px 10px}
+.rail-h{margin:2px 4px 8px;font-size:11px;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.rail-h.gap{margin-top:16px}
+.rlink{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;margin-bottom:6px;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.rlink:hover{background:var(--surface-2)}
+.rlink .ic{width:32px;height:32px;border-radius:9px;flex:none;display:grid;place-items:center}
+.rlink b{display:block;font-size:13px;line-height:1.35}
+.rlink small{display:block;font-size:11.5px;line-height:1.4;color:var(--muted)}
+.rlink .arr{margin-left:auto;color:var(--faint);flex:none}
+.rail-foot{border-top:1px solid var(--line);padding:9px 12px;text-align:center}
 
 /* ── 사이드바 ── */
 .side{background:var(--bg-2);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
@@ -73,7 +85,6 @@ body.preview .app{width:min(1180px,100vw);height:min(820px,100vh);border-radius:
 .skel{height:50px;margin:2px 0;border-radius:8px;background:linear-gradient(90deg,var(--surface) 0,var(--surface-2) 50%,var(--surface) 100%);background-size:200% 100%;animation:sk 1.2s linear infinite}
 @keyframes sk{to{background-position:-200% 0}}
 
-.side-foot{border-top:1px solid var(--line);padding:12px}
 .side-promo{display:block;width:100%;text-align:left;padding:11px 12px 10px;border-radius:10px;margin-bottom:8px;background:linear-gradient(135deg,color-mix(in srgb,var(--pc) 16%,transparent),color-mix(in srgb,var(--pc) 4%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 28%,transparent)}
 .side-promo:hover{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 60%,transparent)}
 .side-promo small{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--pc)}
@@ -84,11 +95,6 @@ body.preview .app{width:min(1180px,100vw);height:min(820px,100vh);border-radius:
 .pts li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--pc)}
 .pcode{display:inline-block;font-weight:800;letter-spacing:.06em;color:var(--pc);background:color-mix(in srgb,var(--pc) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 45%,transparent);padding:0 6px;border-radius:4px;cursor:copy}
 .pcode:hover{background:color-mix(in srgb,var(--pc) 30%,transparent)}
-.cr-links{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
-.chip-btn{display:flex;align-items:center;justify-content:center;gap:6px;height:30px;border-radius:var(--r-sm);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-size:12px;font-weight:600;color:var(--text-2)}
-.chip-btn:hover{background:var(--surface-2);color:var(--text)}
-.donate{width:100%;height:32px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:7px;font-weight:700;font-size:12.5px;color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(230,169,110,.28)}
-.donate:hover{background:rgba(230,169,110,.2)}
 
 /* ── 본문 ── */
 .main{overflow:auto;min-height:0;position:relative;user-select:text}
@@ -105,16 +111,7 @@ h1{font-size:25px;letter-spacing:-.02em;margin:4px 0 2px;font-weight:800}
 .variant-seg{display:inline-flex;margin:0 0 12px}
 .variant-seg button{height:32px;padding:0 16px;font-size:13px}
 
-.promos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.promo-tile{position:relative;display:flex;align-items:center;gap:14px;text-align:left;padding:14px 16px;border-radius:var(--r);overflow:hidden;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
-.promo-tile::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,var(--pc) -60%,transparent 70%);opacity:.22}
-.promo-tile:hover{box-shadow:inset 0 0 0 1px var(--pc)}
-.promo-tile>*{position:relative}
 .promo-ic{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;font-weight:900}
-.promo-tile small{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--pc)}
-.promo-tile b{display:block;font-size:14px;line-height:1.35;margin:1px 0}
-.promo-tile p{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
-.promo-tile .go{margin-left:auto;flex:none;height:30px;padding:0 12px;border-radius:8px;font-size:12px;font-weight:800;display:flex;align-items:center;background:var(--pc);color:#121214}
 
 .alert{display:flex;align-items:center;gap:12px;padding:11px 12px 11px 16px;border-radius:var(--r);background:linear-gradient(90deg,rgba(230,169,110,.14),rgba(230,169,110,.04));box-shadow:inset 0 0 0 1px rgba(230,169,110,.22);margin-bottom:14px}
 .alert.blue{background:linear-gradient(90deg,rgba(111,168,255,.13),rgba(111,168,255,.03));box-shadow:inset 0 0 0 1px rgba(111,168,255,.22)}
@@ -154,8 +151,8 @@ h1{font-size:25px;letter-spacing:-.02em;margin:4px 0 2px;font-weight:800}
 .panel-h h2{margin:0;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
 .link{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
 .link:hover{color:var(--accent)}
-.channel{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;margin-top:26px}
-.vids{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.channel{margin:0 0 18px}
+.vids{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .vid{cursor:pointer;text-align:left}
 .vthumb{aspect-ratio:16/9;border-radius:9px;background:var(--surface-3) center/cover;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
 .vplay{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transition:opacity .2s;background:rgba(0,0,0,.25)}
@@ -281,17 +278,12 @@ h1{font-size:25px;letter-spacing:-.02em;margin:4px 0 2px;font-weight:800}
         </button>
         <div id="sideList"><div class="sec">한글패치</div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
       </div>
-      <div class="side-foot">
-        <div id="sidePromo"></div>
-        <div class="cr-links">
-          <button class="chip-btn" onclick="openUrl(C.youtube.url)"><svg width="14" height="14" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="5" fill="var(--yt)"/><path d="M10 8.5v7l6-3.5z" fill="#fff"/></svg>YouTube</button>
-          <button class="chip-btn" onclick="openUrl(C.links.web)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>zecole.store</button>
-        </div>
-        <button class="donate" onclick="showDonate()"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.4 3 5 6.4 5c2 0 3.3 1 5.6 3.3C14.3 6 15.6 5 17.6 5 21 5 23 8.4 21.6 11.7 19.5 16.4 12 21 12 21z"/></svg>제작 후원하기</button>
-        <button class="link" style="display:block;margin:8px auto 0;font-size:11px;color:var(--faint)" onclick="showNotices()">오픈소스 고지 · MIT 라이선스</button>
-      </div>
     </aside>
     <main class="main" id="main"></main>
+    <aside class="rail">
+      <div class="rail-scroll" id="rail"></div>
+      <div class="rail-foot"><button class="link" style="font-size:11px;color:var(--faint)" onclick="showNotices()">오픈소스 고지 · MIT 라이선스</button></div>
+    </aside>
   </div>
 </div>
 
@@ -594,10 +586,23 @@ function renderSide() {
     const list = ITEMS.filter(g => (g.kind || "tool") === k);
     return list.length ? `<div class="sec">${l} <em class="num">${list.length}</em></div>` + list.map(sideItem).join("") : "";
   }).join(""));
-  setHtml($("#sidePromo"), (C.promos || []).slice(0, 2).map(sidePromo).join(""));
+  setHtml($("#rail"), railHtml());
 }
 
-/* 왼쪽 아래 혜택 칸: 제목 + 혜택 목록(points). 코드(code)는 눌러서 복사 */
+/* 오른쪽 칸: 혜택 두 칸 + 채널·사이트·GitHub·후원 링크 */
+function railHtml() {
+  const row = (onclick, icBg, icFg, ic, title, sub, arr) => `<button class="rlink" onclick="${onclick}">
+    <span class="ic" style="background:${icBg};color:${icFg}">${ic}</span><span style="min-width:0"><b>${title}</b><small>${sub}</small></span><span class="arr">${arr}</span></button>`;
+  const promos = (C.promos || []).slice(0, 2);
+  return (promos.length ? `<div class="rail-h">제휴 혜택</div>${promos.map(sidePromo).join("")}` : "")
+    + `<div class="rail-h${promos.length ? " gap" : ""}">제콜 링크</div>`
+    + row("openUrl(C.youtube.url)", "rgba(255,0,0,.12)", "var(--yt)", ICON.yt.replace(/16/g, "18"), "YouTube · 제콜", "새 한글패치 소개·VR 게임 리뷰. 구독해 주세요!", ICON.ext)
+    + row("openUrl(C.links.web)", "var(--accent-soft)", "var(--accent)", ICON.globe, "zecole.store", "메타 퀘스트 게임 정보, 할인 소식, 한글 지원 여부를 한곳에서.", ICON.ext)
+    + row("openUrl(C.links.github)", "var(--surface-3)", "var(--text)", ICON.gh.replace(/15/g, "18"), "GitHub · " + esc(C.github), "모든 패치의 원본 파일, 릴리스, 오역 제보.", ICON.ext)
+    + row("showDonate()", "rgba(232,102,122,.12)", "var(--err)", ICON.heart.replace(/16/g, "18"), "한글패치 제작 후원", "모든 패치는 무료입니다. 다음 게임 작업에 힘을 보태주세요.", "→");
+}
+
+/* 혜택 칸: 제목 + 혜택 목록(points). 코드(code)는 눌러서 복사 */
 const PROMO_SEAL = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 function sidePromo(p) {
   const code = p.code ? esc(p.code) : "";
@@ -609,14 +614,6 @@ function sidePromo(p) {
 async function copyCode(c) {
   try { await navigator.clipboard.writeText(c); toast(`코드 ${c} 를 복사했어요. 구매할 때 붙여 넣으세요.`, "ok"); }
   catch { toast(`구매할 때 코드 ${c} 를 입력하세요.`); }
-}
-
-function promoTiles(list) {
-  return `<div class="promos">${list.map((p, i) => `
-    <button class="promo-tile" style="--pc:${p.accent || "#6fa8ff"}" onclick="openUrl('${esc(p.url)}')">
-      <span class="promo-ic" style="background:color-mix(in srgb,${p.accent || "#6fa8ff"} 18%,transparent);color:${p.accent || "#6fa8ff"}">${i % 2 ? ICON.tag : ICON.gift}</span>
-      <span style="min-width:0"><small>${esc(p.tag)}</small><b>${esc(p.title)}</b><p>${esc(p.body)}</p></span>
-    </button>`).join("")}</div>`;
 }
 
 function gameCard(g) {
@@ -653,7 +650,7 @@ function renderHome() {
 
   return `<div class="page${S._enter ? " enter" : ""}">
     <div class="head-row">
-      <div><div class="eyebrow">ZECOLE KOREAN PATCH</div><h1>한글패치 라이브러리</h1>
+      <div><div class="eyebrow">ZECOLE LAUNCHER</div><h1>제콜런처 라이브러리</h1>
         <p class="lede num">${patches.length}개 게임 한글패치${extras.length ? ` · 모드·도구 ${extras.length}개` : ""} · 이 PC 설치 ${inst}${ups.length ? ` · <span style="color:var(--accent)">업데이트 ${ups.length}건</span>` : ""}</p></div>
       <div class="seg">${[["all", "전체"], ["installed", "설치됨"], ["pc", "PC VR"], ["quest", "Quest"]].map(([k, l]) =>
         `<button class="${S.filter === k ? "on" : ""}" onclick="S.filter='${k}';store('filter','${k}');render()">${l}</button>`).join("")}</div>
@@ -665,7 +662,10 @@ function renderHome() {
     ${owned.length ? `<div class="alert blue"><span style="color:var(--blue)">${ICON.check}</span>
       <p>이 PC의 Steam에서 한글패치가 있는 게임 <b>${owned.length}개</b>를 찾았어요 · <b>${owned.map(g => esc(g.name)).join(", ")}</b></p>
       <button class="mini blue" onclick="go('${owned[0].id}')">바로 보기</button></div>` : ""}
-    ${promoTiles(C.promos || [])}
+    <section class="channel panel">
+      <div class="panel-h"><h2>${ICON.yt.replace(/16/g, "20")}제콜 채널 최신 영상</h2><button class="link" onclick="openUrl(C.youtube.url)">채널 구독하기 ${ICON.ext}</button></div>
+      <div class="vids">${VIDEOS.slice(0, 4).map(videoCard).join("") || `<div class="empty" style="grid-column:1/-1;padding:24px">영상을 불러오는 중이거나 오프라인입니다.</div>`}</div>
+    </section>
     <div class="grid">
       ${list.map(gameCard).join("") || `<div class="empty">조건에 맞는 한글패치가 없습니다.</div>`}
     </div>
@@ -674,23 +674,6 @@ function renderHome() {
         <span class="pic" style="${bgImg(g.thumbList, g.tint)};font-weight:900;font-size:12px;color:#d9ccff">${g.thumbList.length ? "" : esc(g.glyph || g.name[0])}</span>
         <span><h3>${esc(g.name)} <span class="pill off num" style="margin-left:4px">v${esc(g.latest || "-")}</span></h3><p>${esc(g.sub)} · ${platLabel(g)}</p></span>
         <span class="arr">→</span></button>`).join("")}</div>` : ""}
-    <section class="channel">
-      <div class="panel">
-        <div class="panel-h"><h2>${ICON.yt.replace(/16/g, "20")}제콜 채널 최신 영상</h2><button class="link" onclick="openUrl(C.youtube.url)">채널 구독하기 ${ICON.ext}</button></div>
-        <div class="vids">${VIDEOS.slice(0, 4).map(videoCard).join("") || `<div class="empty" style="grid-column:1/-1;padding:24px">영상을 불러오는 중이거나 오프라인입니다.</div>`}</div>
-      </div>
-      <div class="stack">
-        <button class="panel promo" onclick="openUrl(C.links.web)">
-          <span class="pic" style="background:var(--accent-soft);color:var(--accent)">${ICON.globe}</span>
-          <span><h3>zecole.store</h3><p>메타 퀘스트 게임 정보, 할인 소식, 한글 지원 여부를 한곳에서.</p></span><span class="arr">${ICON.ext}</span></button>
-        <button class="panel promo" onclick="openUrl(C.links.github)">
-          <span class="pic" style="background:var(--surface-3);color:var(--text)">${ICON.gh.replace(/15/g, "20")}</span>
-          <span><h3>GitHub · ${esc(C.github)}</h3><p>모든 패치의 원본 파일, 릴리스, 오역 제보.</p></span><span class="arr">${ICON.ext}</span></button>
-        <button class="panel promo" onclick="showDonate()">
-          <span class="pic" style="background:rgba(232,102,122,.12);color:var(--err)">${ICON.heart.replace(/16/g, "20")}</span>
-          <span><h3>한글패치 제작 후원</h3><p>모든 패치는 무료입니다. 다음 게임 작업에 힘을 보태주세요.</p></span><span class="arr">→</span></button>
-      </div>
-    </section>
   </div>`;
 }
 
