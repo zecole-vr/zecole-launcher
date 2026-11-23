@@ -341,7 +341,7 @@ const on = (evt, f) => (_listeners[evt] = _listeners[evt] || []).push(f);
 const emit = (evt, d) => (_listeners[evt] || []).forEach(f => f(d));
 
 const Mock = {
-  "app.info": async () => ({ version: "1.0.0", startHint: new URLSearchParams(location.search).get("game"), exeName: "ZECOLE_Launcher.exe" }),
+  "app.info": async () => ({ version: "1.0.1", startHint: new URLSearchParams(location.search).get("game"), exeName: "ZECOLE_Launcher.exe" }),
   "net.get": async ({ url }) => { try { const r = await fetch(url); return { status: r.status, body: r.ok ? await r.text() : null }; } catch { return { status: 0, body: null }; } },
   "youtube.feed": async () => [],
   "steam.apps": async () => ({ "2609610": { name: "CONVRGENCE", path: "D:\\SteamLibrary\\steamapps\\common\\CONVRGENCE" }, "559330": { name: "A Fisherman's Tale", path: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\A Fisherman's Tale" } }),
@@ -807,7 +807,7 @@ function renderDetail(g) {
   const disc = (C.promos || []).find(p => p.id === "game-discount");
   const others = ITEMS.filter(x => x.id !== g.id && isPatch(x) && !["ok", "ran"].includes(stat(x).key)).slice(0, 4);
   const welcome = S.welcome === g.id ? `<div class="welcome">${ICON.info.replace('stroke="currentColor"', 'stroke="var(--accent)"')}
-      <p><b>제콜 통합 런처</b>예요. 이 런처 하나로 <b>${ITEMS.filter(isPatch).length}개 게임</b>의 한글패치를 설치·업데이트할 수 있어요.</p>
+      <p><b>제콜 VR 런처</b>예요. 이 런처 하나로 <b>${ITEMS.filter(isPatch).length}개 게임</b>의 한글패치를 설치·업데이트할 수 있어요.</p>
       <button class="mini" onclick="S.welcome=null;go('home')">전체 목록 보기</button><button class="x ghost-btn" style="height:28px;padding:0 6px" onclick="S.welcome=null;render()">${ICON.x}</button></div>` : "";
 
   return `<div class="${S._enter ? "enter" : ""}">

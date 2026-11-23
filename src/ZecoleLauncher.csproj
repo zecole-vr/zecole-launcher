@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    ZECOLE 통합 런처
+    ZECOLE VR 런처
     - .NET Framework 4.8 (Windows 10/11 기본 탑재) → 별도 런타임 설치 없이 실행
     - WebView2(Edge) 로 ui/ 폴더의 화면을 띄움
     - WebView2 DLL 과 화면 파일은 EXE 안에 넣어 단일 파일로 배포
@@ -17,7 +17,7 @@
     <RootNamespace>Zecole.Launcher</RootNamespace>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Product>ZECOLE VR 런처</Product>
     <Company>ZECOLE</Company>
     <Copyright>ZECOLE</Copyright>

@@ -1,7 +1,7 @@
 한글패치에 포함된 글꼴 — SIL Open Font License 1.1
 ===================================================
 
-ZECOLE 통합 런처가 설치하는 한글패치 데이터에는 아래 글꼴(또는 그 일부를 게임용으로 변환한 것)이 들어 있습니다.
+ZECOLE VR 런처가 설치하는 한글패치 데이터에는 아래 글꼴(또는 그 일부를 게임용으로 변환한 것)이 들어 있습니다.
 각 글꼴은 SIL Open Font License 1.1을 따르며, 저작권 표시와 라이선스 전문은 아래와 같습니다.
 
   - 나눔고딕 (NanumGothic): H3VR2, A Fisherman's Tale, CONVRGENCE, Gunman Contracts

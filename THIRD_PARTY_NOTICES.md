@@ -1,6 +1,6 @@
 # Third-Party Notices / 제3자 구성 요소 고지
 
-ZECOLE 통합 런처 자체 코드는 [MIT 라이선스](LICENSE)입니다.
+ZECOLE VR 런처 자체 코드는 [MIT 라이선스](LICENSE)입니다.
 
 런처에 포함된 외부 구성 요소와 각 라이선스 원문은 [`ui/licenses/`](ui/licenses/) 에 있으며,
 같은 파일이 실행 파일(ZECOLE_Launcher.exe) 안에도 들어 있어 런처의 **오픈소스 고지** 메뉴에서 볼 수 있습니다.

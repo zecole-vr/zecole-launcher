@@ -1,4 +1,4 @@
-# ZECOLE 통합 런처
+# ZECOLE VR 런처
 
 VR 유튜브 크리에이터 **제콜(ZECOLE)**이 만든 한글패치와 VR 도구를 **프로그램 하나로 설치·업데이트·원본 복구**하는 Windows 런처입니다.
 
@@ -20,6 +20,7 @@ VR 유튜브 크리에이터 **제콜(ZECOLE)**이 만든 한글패치와 VR 도
 - **안전한 파일 사용**: `zecole-vr` 릴리스 파일만 받고, GitHub에 기록된 SHA-256과 맞을 때만 씁니다. 원본은 이 PC에 백업합니다.
 - **Quest 무선 설치**: USB 또는 무선 디버깅으로 연결합니다. 처음 한 번 USB로 무선을 켜면 이후에는 케이블 없이 쓸 수 있고, 재부팅으로 포트가 바뀌어도 같은 기기를 다시 찾습니다.
 - **기존 설치기와 호환**: 게임별 설치기(EXE)로 설치한 한글패치도 그대로 인식하고 이어서 관리합니다.
+- **VR 소식 한눈에**: 홈에서 제콜 채널 최신 영상과 메타스토어 신규출시 VR 게임을 함께 보여 줍니다. 왼쪽 목록은 Quest 단독 · PC VR · 겸용 · 모드·도구로 나뉩니다.
 
 ## 필요 환경
 
@@ -77,7 +78,7 @@ VR 유튜브 크리에이터 **제콜(ZECOLE)**이 만든 한글패치와 VR 도
 
 ### 런처가 접속하는 곳
 
-`api.github.com`, `raw.githubusercontent.com`, `github.com`(릴리스 파일), `zecole.store`, `www.youtube.com`(채널 RSS), 이미지 CDN(Steam·YouTube), jsDelivr(Pretendard 글꼴). 필요할 때만 Google(ADB)·Meta(Meta VR CLI) 공식 서버. GitHub 응답은 `%LOCALAPPDATA%\ZECOLE\Launcher\cache`에 저장하고 ETag로 바뀐 것만 다시 받습니다.
+`api.github.com`, `raw.githubusercontent.com`, `github.com`(릴리스 파일), `zecole.store`(메타스토어 신규출시 목록 `/api/launcher/new-games`), `www.youtube.com`(채널 RSS), 이미지 CDN(Steam·YouTube·zecole.store 이미지 저장소), jsDelivr(Pretendard 글꼴). 필요할 때만 Google(ADB)·Meta(Meta VR CLI) 공식 서버. GitHub 응답은 `%LOCALAPPDATA%\ZECOLE\Launcher\cache`에 저장하고 ETag로 바뀐 것만 다시 받습니다.
 
 ## 라이선스
 
