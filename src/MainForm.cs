@@ -10,10 +10,10 @@ using Microsoft.Web.WebView2.WinForms;
 
 namespace Zecole.Launcher
 {
-    /// <summary>테두리 없는 1120×720 창. 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
+    /// <summary>테두리 없는 1180×820 창(화면이 작으면 작업 영역에 맞춰 줄임). 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
     internal sealed class MainForm : Form
     {
-        public const int LogicalWidth = 1120, LogicalHeight = 720;
+        public const int LogicalWidth = 1180, LogicalHeight = 820;
         private const string Host = "app.zecole.local";
 
         private readonly WebView2 _web = new WebView2();
@@ -28,8 +28,7 @@ namespace Zecole.Launcher
             MaximizeBox = false;
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
 
-            var scale = DeviceDpi / 96f;
-            ClientSize = new Size((int)(LogicalWidth * scale), (int)(LogicalHeight * scale));
+            ClientSize = FitSize(DeviceDpi / 96f);
 
             _web.Dock = DockStyle.Fill;
             _web.DefaultBackgroundColor = BackColor;
@@ -56,8 +55,21 @@ namespace Zecole.Launcher
         protected override void OnDpiChanged(DpiChangedEventArgs e)
         {
             base.OnDpiChanged(e);
-            var scale = e.DeviceDpiNew / 96f;
-            ClientSize = new Size((int)(LogicalWidth * scale), (int)(LogicalHeight * scale));
+            ClientSize = FitSize(e.DeviceDpiNew / 96f);
+        }
+
+        /// <summary>기본 크기 × DPI 배율. 모니터 작업 영역(작업 표시줄 제외)보다 크면 그 안에 들어가게 줄인다.</summary>
+        private Size FitSize(float scale)
+        {
+            int w = (int)(LogicalWidth * scale), h = (int)(LogicalHeight * scale);
+            try
+            {
+                var wa = IsHandleCreated ? Screen.FromHandle(Handle).WorkingArea : Screen.FromPoint(Cursor.Position).WorkingArea;
+                w = Math.Min(w, wa.Width - 24);
+                h = Math.Min(h, wa.Height - 24);
+            }
+            catch { }
+            return new Size(Math.Max(w, 640), Math.Max(h, 480));
         }
 
         protected override async void OnShown(EventArgs e)

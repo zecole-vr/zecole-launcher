@@ -29,7 +29,7 @@ a{color:inherit;text-decoration:none}
 /* 브라우저 미리보기에서만 창처럼 띄움. 런처 안에서는 창 전체를 채움 */
 body.preview{display:grid;place-items:center;background:#08080a radial-gradient(ellipse at 30% 20%,#1a1712 0,transparent 60%)}
 .app{width:100vw;height:100vh;display:grid;grid-template-rows:40px 1fr;background:var(--bg);overflow:hidden}
-body.preview .app{width:min(1120px,100vw);height:min(720px,100vh);border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,.09),0 30px 90px rgba(0,0,0,.6)}
+body.preview .app{width:min(1180px,100vw);height:min(820px,100vh);border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,.09),0 30px 90px rgba(0,0,0,.6)}
 
 /* ── 제목 줄 ── */
 .titlebar{display:flex;align-items:center;gap:10px;padding-left:16px;background:var(--bg);border-bottom:1px solid var(--line)}
@@ -48,7 +48,7 @@ body.preview .app{width:min(1120px,100vw);height:min(720px,100vh);border-radius:
 .dot.warn{background:var(--accent)} .dot.off{background:var(--faint)} .dot.err{background:var(--err)} .dot.blue{background:var(--blue)}
 .pulse{animation:pulse 1s ease-in-out infinite alternate}@keyframes pulse{from{opacity:.35}to{opacity:1}}
 
-.body{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:0}
+.body{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:0}
 
 /* ── 사이드바 ── */
 .side{background:var(--bg-2);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
@@ -74,10 +74,16 @@ body.preview .app{width:min(1120px,100vw);height:min(720px,100vh);border-radius:
 @keyframes sk{to{background-position:-200% 0}}
 
 .side-foot{border-top:1px solid var(--line);padding:12px}
-.side-promo{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:10px;margin-bottom:10px;background:linear-gradient(135deg,rgba(111,168,255,.16),rgba(111,168,255,.04));box-shadow:inset 0 0 0 1px rgba(111,168,255,.25)}
-.side-promo:hover{box-shadow:inset 0 0 0 1px rgba(111,168,255,.5)}
-.side-promo small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--blue)}
-.side-promo b{display:block;font-size:12.5px;line-height:1.4;margin-top:2px}
+.side-promo{display:block;width:100%;text-align:left;padding:11px 12px 10px;border-radius:10px;margin-bottom:8px;background:linear-gradient(135deg,color-mix(in srgb,var(--pc) 16%,transparent),color-mix(in srgb,var(--pc) 4%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 28%,transparent)}
+.side-promo:hover{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 60%,transparent)}
+.side-promo small{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--pc)}
+.side-promo small svg{flex:none}
+.side-promo b{display:block;font-size:13px;line-height:1.4;margin-top:3px}
+.pts{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px}
+.pts li{position:relative;padding-left:13px;font-size:11.5px;line-height:1.45;color:var(--text-2)}
+.pts li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--pc)}
+.pcode{display:inline-block;font-weight:800;letter-spacing:.06em;color:var(--pc);background:color-mix(in srgb,var(--pc) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 45%,transparent);padding:0 6px;border-radius:4px;cursor:copy}
+.pcode:hover{background:color-mix(in srgb,var(--pc) 30%,transparent)}
 .cr-links{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
 .chip-btn{display:flex;align-items:center;justify-content:center;gap:6px;height:30px;border-radius:var(--r-sm);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-size:12px;font-weight:600;color:var(--text-2)}
 .chip-btn:hover{background:var(--surface-2);color:var(--text)}
@@ -588,8 +594,21 @@ function renderSide() {
     const list = ITEMS.filter(g => (g.kind || "tool") === k);
     return list.length ? `<div class="sec">${l} <em class="num">${list.length}</em></div>` + list.map(sideItem).join("") : "";
   }).join(""));
-  const p = (C.promos || [])[(store("promoIdx") || 0) % Math.max(1, (C.promos || []).length)];
-  setHtml($("#sidePromo"), p ? `<button class="side-promo" style="--pc:${p.accent || "var(--blue)"}" onclick="openUrl('${esc(p.url)}')"><small style="color:${p.accent || "var(--blue)"}">${esc(p.tag)}</small><b>${esc(p.title)}</b></button>` : "");
+  setHtml($("#sidePromo"), (C.promos || []).slice(0, 2).map(sidePromo).join(""));
+}
+
+/* 왼쪽 아래 혜택 칸: 제목 + 혜택 목록(points). 코드(code)는 눌러서 복사 */
+const PROMO_SEAL = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+function sidePromo(p) {
+  const code = p.code ? esc(p.code) : "";
+  const mark = t => { const e = esc(t); return code && e.includes(code) ? e.replace(code, `<span class="pcode" title="눌러서 코드 복사" onclick="event.stopPropagation();copyCode('${code}')">${code}</span>`) : e; };
+  return `<button class="side-promo" style="--pc:${p.accent || "#6fa8ff"}" onclick="openUrl('${esc(p.url)}')">
+    <small>${/공식/.test(p.tag || "") ? PROMO_SEAL : ""}${esc(p.tag)}</small><b>${esc(p.title)}</b>
+    ${(p.points || []).length ? `<ul class="pts">${p.points.map(t => `<li>${mark(t)}</li>`).join("")}</ul>` : ""}</button>`;
+}
+async function copyCode(c) {
+  try { await navigator.clipboard.writeText(c); toast(`코드 ${c} 를 복사했어요. 구매할 때 붙여 넣으세요.`, "ok"); }
+  catch { toast(`구매할 때 코드 ${c} 를 입력하세요.`); }
 }
 
 function promoTiles(list) {
@@ -1276,7 +1295,6 @@ addEventListener("keydown", e => { if (e.key === "Escape") { if ($("#scrim").cla
   await Promise.all([steamP, refreshStatus()]);
   render();
   if (S.info.startHint && !S.hintDone) { S.hintDone = true; openHint(S.info.startHint); }
-  store("promoIdx", (store("promoIdx") || 0) + 1);
   host("youtube.feed", { channelId: C.youtube.channelId }).then(v => { VIDEOS = v || []; render(); }).catch(() => { });
   checkLauncherUpdate();
   setInterval(async () => { if (!S.busy) { await refreshStatus(); render(); } }, 60000);
