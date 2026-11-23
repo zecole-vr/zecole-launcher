@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ZECOLE 한글패치 런처</title>
+<title>ZECOLE VR 런처</title>
 <link rel="icon" href="icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
@@ -260,7 +260,7 @@ h1{font-size:25px;letter-spacing:-.02em;margin:4px 0 2px;font-weight:800}
 <body>
 <div class="app">
   <header class="titlebar" id="titlebar">
-    <div class="brand"><div class="mark"></div><b>ZECOLE</b><span>한글패치 런처</span></div>
+    <div class="brand"><div class="mark"></div><b>ZECOLE</b><span>VR 런처</span></div>
     <div class="tb-sp" data-drag></div>
     <div class="tb-meta num" id="syncMeta" data-drag></div>
     <div id="updPill"></div>
@@ -650,7 +650,7 @@ function renderHome() {
 
   return `<div class="page${S._enter ? " enter" : ""}">
     <div class="head-row">
-      <div><div class="eyebrow">ZECOLE LAUNCHER</div><h1>제콜런처 라이브러리</h1>
+      <div><div class="eyebrow">ZECOLE LAUNCHER</div><h1>라이브러리</h1>
         <p class="lede num">${patches.length}개 게임 한글패치${extras.length ? ` · 모드·도구 ${extras.length}개` : ""} · 이 PC 설치 ${inst}${ups.length ? ` · <span style="color:var(--accent)">업데이트 ${ups.length}건</span>` : ""}</p></div>
       <div class="seg">${[["all", "전체"], ["installed", "설치됨"], ["pc", "PC VR"], ["quest", "Quest"]].map(([k, l]) =>
         `<button class="${S.filter === k ? "on" : ""}" onclick="S.filter='${k}';store('filter','${k}');render()">${l}</button>`).join("")}</div>

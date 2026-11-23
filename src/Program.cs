@@ -13,7 +13,9 @@ namespace Zecole.Launcher
 {
     internal static class Program
     {
-        public const string AppTitle = "ZECOLE 한글패치 런처";
+        public const string AppTitle = "ZECOLE VR 런처";
+        /// <summary>v1.0.0까지 쓰던 창 이름. 예전 버전 창이 켜져 있을 때도 찾을 수 있게 남겨 둠.</summary>
+        public const string LegacyTitle = "ZECOLE 한글패치 런처";
         public static string Version => Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 
         /// <summary>%LOCALAPPDATA%\Zecole — 각 게임 설치기들이 공유하는 상위 폴더</summary>
@@ -44,7 +46,7 @@ namespace Zecole.Launcher
             _mutex = new Mutex(true, @"Local\ZECOLE.Launcher.Single", out bool first);
             if (!first)
             {
-                Native.SendToExisting(AppTitle, StartHint ?? "");
+                Native.SendToExisting(StartHint ?? "", AppTitle, LegacyTitle);
                 return;
             }
 
@@ -189,9 +191,10 @@ namespace Zecole.Launcher
             catch { /* Windows 10 은 해당 속성 없음 */ }
         }
 
-        public static void SendToExisting(string title, string text)
+        public static void SendToExisting(string text, params string[] titles)
         {
-            var h = FindWindow(null, title);
+            var h = IntPtr.Zero;
+            foreach (var t in titles) { h = FindWindow(null, t); if (h != IntPtr.Zero) break; }
             if (h == IntPtr.Zero) return;
             var p = Marshal.StringToHGlobalUni(text);
             try
