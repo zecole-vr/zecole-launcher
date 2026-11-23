@@ -100,6 +100,8 @@ body.preview .app{width:min(1460px,100vw);height:min(820px,100vh);border-radius:
 .deal span{display:block;margin-top:2px;font-size:11px;line-height:1.35;color:var(--text-2)}
 .deal em{display:block;font-style:normal;font-size:10.5px;color:var(--muted)}
 .deal.hot{background:linear-gradient(135deg,color-mix(in srgb,var(--pc) 24%,transparent),color-mix(in srgb,var(--pc) 8%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 50%,transparent)}
+.cline{display:flex;align-items:center;gap:6px;margin-top:9px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--pc) 30%,transparent);font-size:11.5px;line-height:1.45;color:var(--text-2)}
+.cline svg{flex:none;color:var(--pc)}
 .pts{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px}
 .pts li{position:relative;padding-left:13px;font-size:11.5px;line-height:1.45;color:var(--text-2)}
 .pts li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--pc)}
@@ -647,7 +649,8 @@ function sidePromo(p) {
     ${(p.deals || []).length ? `<div class="deals">${p.deals.slice(0, 2).map((d, i, a) => {
       const hot = a.length > 1 && i === a.length - 1 && parseInt(d.pct) >= Math.max(...a.map(x => parseInt(x.pct) || 0));
       return `<div class="deal${hot ? " hot" : ""}"><b>${esc(d.pct)}<small>할인</small></b><span>${esc(d.label)}</span>${d.note ? `<em>${esc(d.note)}</em>` : ""}</div>`; }).join("")}</div>` : ""}
-    ${(p.points || []).length ? `<ul class="pts">${p.points.map(t => `<li>${mark(t)}</li>`).join("")}</ul>` : ""}</button>`;
+    ${(p.points || []).length ? `<ul class="pts">${p.points.map(t => `<li>${mark(t)}</li>`).join("")}</ul>` : ""}
+    ${p.codeLine ? `<div class="cline">${ICON.tag.replace(/20/g, "13")}<span>${mark(p.codeLine)}</span></div>` : ""}</button>`;
 }
 async function copyCode(c) {
   try { await navigator.clipboard.writeText(c); toast(`코드 ${c} 를 복사했어요. 구매할 때 붙여 넣으세요.`, "ok"); }

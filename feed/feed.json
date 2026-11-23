@@ -19,7 +19,9 @@
         "게임 구매 크레딧 3.6만 원 증정",
         "Horizon+ 구독 3개월 무료"
       ],
-      "body": "Meta 공식 제휴 혜택 · 30일 이내 쓰던 제품도 무료 반품, 게임 크레딧 3.6만 원, Horizon+ 3개월 무료.",
+      "codeLine": "장바구니에서 ZECOLE 입력 시 자동 적용",
+      "code": "ZECOLE",
+      "body": "Meta 공식 제휴 혜택 · 30일 이내 쓰던 제품도 무료 반품, 게임 크레딧 3.6만 원, Horizon+ 3개월 무료. 장바구니에서 프로모션 코드 ZECOLE을 입력하면 자동 적용됩니다.",
       "cta": "혜택 받기",
       "url": "https://zecole.store",
       "accent": "#6fa8ff"
@@ -35,15 +37,12 @@
         },
         {
           "pct": "50%",
-          "label": "무료 게임 첫 인앱결제",
-          "note": "DLC 포함"
+          "label": "무료 게임 첫 인앱결제"
         }
       ],
-      "points": [
-        "구매할 때 ZECOLE 코드 입력"
-      ],
+      "codeLine": "구매할 때 ZECOLE 코드 입력",
       "code": "ZECOLE",
-      "body": "Meta 공식 제휴 혜택 · 유료 게임은 10%, 무료 게임은 첫 인앱결제(DLC 포함) 50% 할인. 구매할 때 ZECOLE 코드를 입력하세요.",
+      "body": "Meta 공식 제휴 혜택 · 유료 게임은 10%, 무료 게임은 첫 인앱결제 50% 할인. 구매할 때 ZECOLE 코드를 입력하세요.",
       "cta": "할인 받기",
       "url": "https://zecole.store",
       "accent": "#e6a96e"
