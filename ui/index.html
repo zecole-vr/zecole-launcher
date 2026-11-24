@@ -1264,19 +1264,18 @@ function pcView(g) {
   return { label, cls, note, third, actions, fact1, primaryClick: `pcRun('${g.id}','install')`, primaryDisabled: busyAny || q.checking || !q.canInstall };
 }
 
-/* 설치기가 닫힌 순간 = 다른 패치·혜택을 보여주기 좋은 순간 */
+/* 설치기가 닫힌 순간 = 다른 패치를 보여주기 좋은 순간.
+   제휴 혜택·후원은 오른쪽 칸에 항상 떠 있으므로 여기서 또 띄우지 않음(반복 노출은 역효과) */
 function afterInstall(g, engineDone) {
   const s = stat(g);
   const others = ITEMS.filter(x => x.id !== g.id && isPatch(x) && !["ok", "ran"].includes(stat(x).key))
     .sort((a, b) => (!!steamOf(b) - !!steamOf(a)) || (b.date || "").localeCompare(a.date || "")).slice(0, 3);
-  const p = (C.promos || [])[0];
   showModal(`
     <div class="done-ic">${ICON.check.replace(/15/g, "24")}</div>
     <h2>${engineDone ? esc(g.name) + " 한글패치 설치 완료" : esc(g.name) + " 설치기가 닫혔어요"}</h2>
     <p>${engineDone ? `<b style="color:var(--ok)">${isPcEngine(g) ? "게임 파일이 검증된 한글판과 일치합니다." : "Quest의 게임 파일이 검증된 한글판과 일치합니다."}</b> ${esc(engineDone === true ? "" : engineDone)} 게임을 실행해 확인해 보세요. ` : s.key === "ok" ? `<b style="color:var(--ok)">v${esc(s.inst)} 설치가 확인됐습니다.</b> ` : "설치를 마쳤다면 게임을 실행해 한글이 나오는지 확인해 주세요. "}${engineDone ? "문제가 있으면 이 화면에서 언제든 원본 복구를 할 수 있어요." : "문제가 있으면 설치기를 다시 열어 제거·원본 복구를 할 수 있어요."}</p>
     ${others.length ? `<div class="eyebrow" style="margin:4px 0 10px">다른 게임도 한글로 즐겨 보세요</div><div class="more" style="grid-template-columns:repeat(3,minmax(0,1fr))">${others.map(miniCard).join("")}</div>` : ""}
-    ${p ? `<button class="dn" style="margin-top:14px" onclick="openUrl('${esc(p.url)}')"><span class="dn-ic" style="background:var(--blue-soft);color:${p.accent}">${ICON.gift}</span><span><b>${esc(p.title)}</b><span>${esc(p.body)}</span></span><span class="arr">→</span></button>` : ""}
-    <div class="mfoot"><button class="ghost-btn" onclick="hideModal();showDonate()">후원하기</button><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal()">확인</button></div>`, true);
+    <div class="mfoot"><button class="mini acc" style="height:36px;padding:0 16px" onclick="hideModal()">확인</button></div>`, true);
 }
 
 /* 오픈소스 고지: 실행 파일 안에 함께 들어 있는 licenses 폴더의 원문을 보여 줌 */
