@@ -123,9 +123,12 @@ namespace Zecole.Launcher.Pc
         {
             try
             {
-                var dir = eng.WriteDir; if (!Directory.Exists(dir)) return true;
-                var probe = Path.Combine(dir, ".zecole-write-" + Guid.NewGuid().ToString("N"));
-                using (File.Create(probe, 1, FileOptions.DeleteOnClose)) { }
+                foreach (var dir in eng.WriteDirs)
+                {
+                    if (!Directory.Exists(dir)) return true;
+                    var probe = Path.Combine(dir, ".zecole-write-" + Guid.NewGuid().ToString("N"));
+                    using (File.Create(probe, 1, FileOptions.DeleteOnClose)) { }
+                }
                 return false;
             }
             catch { return true; }
@@ -223,6 +226,23 @@ namespace Zecole.Launcher.Pc
                     var got = PyInstallerArchive.ExtractWhere(file, n => n.StartsWith(pre) && !n.Contains("/ui/") ? Safe(n.Substring(pre.Length)) : null);
                     if (!got.Contains(pre + "patch/Fisherman-KoreanSubtitles_P.pak")) throw new PatchError("설치기 안에 Steam용 패치가 없습니다.");
                     break;
+                case "pc-convrgence":
+                    if (file.EndsWith(".zpkg", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // 데이터 전용 묶음(CONVRGENCE_Steam_v*.zpkg): 설치기 bundle/ 과 같은 구성(manifest.json, payload/, runtime/, sources/, licenses/)
+                        using (var z = ZipFile.OpenRead(file))
+                            foreach (var e in z.Entries.Where(e => !e.FullName.EndsWith("/")))
+                            {
+                                var t = Safe(e.FullName); Directory.CreateDirectory(Path.GetDirectoryName(t)); e.ExtractToFile(t, true);
+                            }
+                    }
+                    else
+                    {
+                        // 예전 설치기 EXE 안의 bundle/ (설치기 화면 ui/ 는 제외)
+                        PyInstallerArchive.ExtractWhere(file, n => n.StartsWith("bundle/") && !n.StartsWith("bundle/ui/") ? Safe(n.Substring(7)) : null);
+                    }
+                    if (!File.Exists(Path.Combine(stage, "manifest.json"))) throw new PatchError("패치 데이터에 manifest.json 이(가) 없습니다.");
+                    break;
                 case "pc-tf2vr":       // GitHub 배포 zip 의 payload 폴더
                     using (var z = ZipFile.OpenRead(file))
                         foreach (var e in z.Entries.Where(e => e.FullName.StartsWith("payload/") && !e.FullName.EndsWith("/")))
@@ -264,14 +284,19 @@ namespace Zecole.Launcher.Pc
                 var now = await Task.Run(() => eng.Inspect());
                 var nowState = (string)now["state"];
                 if (nowState == "other") throw new PatchError(now["message"] as string ?? "지원하지 않는 게임 상태입니다.");
-                if (action == "install" && nowState == "installed" && !eng.AlwaysReapply) message = "이미 최신 한글패치가 설치되어 있습니다. 게임 파일 검증을 마쳤습니다.";
-                else if (action == "restore" && nowState == "original") message = "이미 원본 상태입니다.";
-                else if (NeedsAdmin(eng))
+                if (action == "install" && nowState == "installed" && !eng.AlwaysReapply && !eng.AlwaysRunEngine) message = "이미 최신 한글패치가 설치되어 있습니다. 게임 파일 검증을 마쳤습니다.";
+                else if (action == "restore" && nowState == "original" && !eng.AlwaysRunEngine) message = "이미 원본 상태입니다.";
+                else
                 {
-                    say("Windows 관리자 권한 확인 창에서 '예'를 눌러 주세요…", null);
-                    message = await RunElevatedAsync(r.Engine, root, pkg, action, say);
+                    // 필요한 추가 파일은 관리자 권한을 요청하기 전에 일반 권한으로 받아 둠
+                    if (action == "install") await Task.Run(() => eng.Prefetch(say));
+                    if (NeedsAdmin(eng))
+                    {
+                        say("Windows 관리자 권한 확인 창에서 '예'를 눌러 주세요…", null);
+                        message = await RunElevatedAsync(r.Engine, root, pkg, action, say);
+                    }
+                    else message = await Task.Run(() => eng.Apply(action, say));
                 }
-                else message = await Task.Run(() => eng.Apply(action, say));
                 say(message, 100);
                 var st = Scan(r);
                 st["success"] = true; st["message"] = message; st["log"] = logPath;
@@ -367,6 +392,8 @@ namespace Zecole.Launcher.Pc
                 if (!pkg.StartsWith(Path.Combine(launcherDir, "packages") + "\\", StringComparison.OrdinalIgnoreCase)) throw new PatchError("패치 데이터 위치가 올바르지 않습니다.");
                 if (action != "install" && action != "restore") throw new PatchError("지원하지 않는 작업입니다.");
                 var eng = PcPatch.Create(engine, root, pkg);
+                // CONVRGENCE: UAC 에서 다른 관리자 계정으로 승인해도 요청한 사용자의 기록·백업 폴더(…\Zecole\CONVRGENCE)를 씀
+                if (eng is ConvrgenceSteam conv) conv.Storage = Path.Combine(Path.GetDirectoryName(launcherDir), "CONVRGENCE");
                 if (!Directory.Exists(root) || !eng.LooksLikeGame(root) || (new DirectoryInfo(root).Attributes & FileAttributes.ReparsePoint) != 0)
                     throw new PatchError("게임 설치 폴더가 올바르지 않습니다.");
                 var msg = eng.Apply(action, (m, p) =>

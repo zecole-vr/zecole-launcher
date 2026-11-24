@@ -34,6 +34,14 @@ namespace Zecole.Launcher.Pc
         /// <summary>읽기 전용 상태: state(installed/original/mixed/other), version, canRestore, message</summary>
         public abstract Dictionary<string, object> Inspect();
         protected abstract string DoApply(string action, Action<string, double?> say);
+        /// <summary>설치 전에 일반 권한으로 미리 받아 둘 것 (관리자 권한 작업에서는 내려받지 않도록)</summary>
+        public virtual void Prefetch(Action<string, double?> say) { }
+        /// <summary>
+        /// true 면 화면 상태가 이미 설치됨/원본이어도 엔진을 항상 실행 (작업 기록 복구·영수증 갱신을 엔진이 잠금 안에서 처리하는 게임)
+        /// </summary>
+        public virtual bool AlwaysRunEngine => false;
+        /// <summary>쓰기 권한을 확인할 폴더들 (하나라도 쓸 수 없으면 관리자 권한으로 실행)</summary>
+        public virtual IEnumerable<string> WriteDirs => new[] { WriteDir };
 
         /// <summary>
         /// 설치·복구. 같은 게임 폴더에 대한 작업은 프로세스(일반·관리자 권한)를 가리지 않고 하나만 실행.
@@ -82,6 +90,7 @@ namespace Zecole.Launcher.Pc
                 case "pc-gunman": p = new XorGzPatch(); break;
                 case "pc-bg2": p = new OffsetDeltaPatch(); break;
                 case "pc-tf2vr": p = new Tf2Vr(); break;
+                case "pc-convrgence": p = new ConvrgenceSteam(); break;
                 default: throw new PatchError("지원하지 않는 설치 엔진입니다: " + engine);
             }
             p.Root = root; p.Pkg = pkg;

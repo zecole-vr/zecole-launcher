@@ -59,12 +59,31 @@ namespace Zecole.Launcher
             try
             {
                 string engine = args[1], file = args[2], root = Path.GetFullPath(args[3]);
+                // 입력부터 모두 확인한 뒤에 폴더를 만들거나 지움
+                if (!File.Exists(file)) throw new FileNotFoundException("패치 파일이 없습니다: " + file);
+                if (!Directory.Exists(root)) throw new DirectoryNotFoundException("사본 게임 폴더가 없습니다: " + root);
+                if (engine == "pc-convrgence" && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ZECOLE_SELFTEST_STORAGE")))
+                    throw new InvalidOperationException("CONVRGENCE 자체 시험은 ZECOLE_SELFTEST_STORAGE(시험용 기록 폴더)가 필요합니다.");
                 var stage = root + ".pkg";
-                if (Directory.Exists(stage)) Directory.Delete(stage, true);
+                const string Mark = ".zecole-selftest";   // 자체 시험이 만든 폴더만 지움
+                if (Directory.Exists(stage))
+                {
+                    if (!File.Exists(Path.Combine(stage, Mark))) throw new IOException("자체 시험이 만들지 않은 폴더가 이미 있어 멈춥니다: " + stage);
+                    Directory.Delete(stage, true);
+                }
                 Directory.CreateDirectory(stage);
+                File.WriteAllText(Path.Combine(stage, Mark), "ZECOLE 런처 자체 시험용 임시 폴더");
                 var pkg = Path.Combine(stage, Pc.PcService.ExtractPackage(engine, file, stage));
                 result["extractSeconds"] = sw.Elapsed.TotalSeconds;
                 var eng = Pc.PcPatch.Create(engine, root, pkg);
+                // CONVRGENCE: 기록·백업 위치를 시험 폴더로 (실제 %LOCALAPPDATA%\ZECOLE\CONVRGENCE 를 건드리지 않음)
+                var conv = eng as Pc.ConvrgenceSteam;
+                if (conv != null)
+                {
+                    var st = Environment.GetEnvironmentVariable("ZECOLE_SELFTEST_STORAGE");
+                    if (string.IsNullOrEmpty(st)) throw new InvalidOperationException("CONVRGENCE 자체 시험은 ZECOLE_SELFTEST_STORAGE(시험용 기록 폴더)가 필요합니다.");
+                    conv.Storage = Path.GetFullPath(st);
+                }
                 result["packageVersion"] = eng.PackageVersion;
                 void Inspect(string label)
                 {
@@ -72,8 +91,17 @@ namespace Zecole.Launcher
                     steps.Add(new Dictionary<string, object> { ["step"] = "inspect:" + label, ["state"] = i["state"], ["version"] = i["version"], ["canRestore"] = i["canRestore"], ["message"] = i["message"], ["sec"] = t.Elapsed.TotalSeconds });
                 }
                 Inspect("start");
-                foreach (var action in (args.Length > 5 ? args[5] : "restore,install,install").Split(','))
+                foreach (var step in (args.Length > 5 ? args[5] : "restore,install,install").Split(','))
                 {
+                    // 동작@failN = N번째 파일 적용 뒤 실패, 동작@killN = N번째 파일 적용 뒤 강제 종료(86) — CONVRGENCE 시험용
+                    var action = step.Split('@')[0];
+                    if (conv != null)
+                    {
+                        var mk = System.Text.RegularExpressions.Regex.Match(step, "@(fail|kill)([0-9]+)$");
+                        conv.FailAfter = mk.Success && mk.Groups[1].Value == "fail" ? int.Parse(mk.Groups[2].Value) : 0;
+                        conv.InterruptAfter = mk.Success && mk.Groups[1].Value == "kill" ? int.Parse(mk.Groups[2].Value) : 0;
+                        if (action == "install") conv.Prefetch((m, p) => log.AppendLine("prefetch · " + m));
+                    }
                     var t = Stopwatch.StartNew();
                     try { var m = eng.Apply(action, (msg, p) => log.AppendLine(action + " · " + msg)); steps.Add(new Dictionary<string, object> { ["step"] = action, ["ok"] = true, ["message"] = m, ["sec"] = t.Elapsed.TotalSeconds }); }
                     catch (Exception ex) { steps.Add(new Dictionary<string, object> { ["step"] = action, ["ok"] = false, ["message"] = ex.Message, ["sec"] = t.Elapsed.TotalSeconds }); }

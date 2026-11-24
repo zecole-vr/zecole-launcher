@@ -112,7 +112,7 @@
       "id": "convrgence", "kind": "patch", "order": 30,
       "name": "CONVRGENCE", "sub": "컨버전스",
       "platforms": ["pcvr"], "store": "Steam", "steamAppId": "2609610",
-      "install": { "mode": "exe", "asset": "^CONVRGENCE_Steam_Windows_.*\\.exe$" },
+      "install": { "mode": "engine", "engine": "pc-convrgence", "asset": "^(CONVRGENCE_Steam_Windows_.*_Setup_[\\d.]+\\.exe|CONVRGENCE_Steam_v[\\d.]+\\.zpkg)$" },
       "stateDir": "CONVRGENCE",
       "detect": [{ "path": "CONVRGENCE/installations/*/*/installation.json", "version": "patch_version", "state": "state", "ok": "installed" }],
       "dep": { "label": "게임 버전", "value": "1.1.1", "note": "빌드 26546310 대응" },
