@@ -37,9 +37,16 @@ namespace Zecole.Launcher
             else Post(json);
         }
 
+        private volatile bool _closing;
+        /// <summary>창 닫기가 시작됨. 이후 화면으로 보내지 못한 알림은 오류로 남기지 않음</summary>
+        public void MarkClosing() => _closing = true;
+
         private void Post(string json)
         {
-            try { _core.PostWebMessageAsJson(json); } catch (Exception ex) { Log.Error("post", ex); }
+            try { _core.PostWebMessageAsJson(json); }
+            // 창을 닫는 중(WebView2 정리 뒤)에 늦게 도착한 알림은 받을 화면이 없으므로 오류로 남기지 않음
+            catch (InvalidOperationException) when (_closing) { }
+            catch (Exception ex) { Log.Error("post", ex); }
         }
 
         public async void Handle(string raw)

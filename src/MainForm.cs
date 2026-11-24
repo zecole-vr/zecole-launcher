@@ -92,6 +92,7 @@ namespace Zecole.Launcher
         {
             base.OnFormClosing(e);
             if (e.Cancel) return;
+            _bridge?.MarkClosing();
             try
             {
                 var at = WindowState == FormWindowState.Normal ? Location : RestoreBounds.Location;
