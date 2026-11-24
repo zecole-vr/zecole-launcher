@@ -23,7 +23,12 @@ namespace Zecole.Launcher.Pc
     {
         public const string UnityLibUrl = "https://unity.bepinex.dev/libraries/2019.4.2.zip";
         /// <summary>백업·기록·로그 (기존 설치기와 같은 %LOCALAPPDATA%\ZECOLE\CONVRGENCE). 자체 시험에서만 바꿈</summary>
-        public string Storage = Path.Combine(Program.ZecoleRoot, "CONVRGENCE");
+        public string Storage = StorageUnder(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+        /// <summary>
+        /// 기존 설치기(launcher.py)는 LOCALAPPDATA\"ZECOLE"\CONVRGENCE 로 적었으므로 대문자 그대로 씀.
+        /// 실제 폴더(Zecole)와 같은 곳이지만, installation.json 의 backup 문자열이 기존 기록과 똑같아짐.
+        /// </summary>
+        public static string StorageUnder(string localAppData) => Path.Combine(localAppData, "ZECOLE", "CONVRGENCE");
         /// <summary>자체 시험용: n번째 파일 적용 뒤 실패 / 강제 종료(86)</summary>
         public int FailAfter, InterruptAfter;
 

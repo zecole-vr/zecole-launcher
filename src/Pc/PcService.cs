@@ -392,8 +392,8 @@ namespace Zecole.Launcher.Pc
                 if (!pkg.StartsWith(Path.Combine(launcherDir, "packages") + "\\", StringComparison.OrdinalIgnoreCase)) throw new PatchError("패치 데이터 위치가 올바르지 않습니다.");
                 if (action != "install" && action != "restore") throw new PatchError("지원하지 않는 작업입니다.");
                 var eng = PcPatch.Create(engine, root, pkg);
-                // CONVRGENCE: UAC 에서 다른 관리자 계정으로 승인해도 요청한 사용자의 기록·백업 폴더(…\Zecole\CONVRGENCE)를 씀
-                if (eng is ConvrgenceSteam conv) conv.Storage = Path.Combine(Path.GetDirectoryName(launcherDir), "CONVRGENCE");
+                // CONVRGENCE: UAC 에서 다른 관리자 계정으로 승인해도 요청한 사용자의 기록·백업 폴더(…\Local\ZECOLE\CONVRGENCE)를 씀
+                if (eng is ConvrgenceSteam conv) conv.Storage = ConvrgenceSteam.StorageUnder(Path.GetDirectoryName(Path.GetDirectoryName(launcherDir)));
                 if (!Directory.Exists(root) || !eng.LooksLikeGame(root) || (new DirectoryInfo(root).Attributes & FileAttributes.ReparsePoint) != 0)
                     throw new PatchError("게임 설치 폴더가 올바르지 않습니다.");
                 var msg = eng.Apply(action, (m, p) =>
