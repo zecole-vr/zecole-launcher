@@ -428,7 +428,9 @@ function pickAsset(item, release) {
   if (mode === "page") return null;
   const re = item.install?.asset ? new RegExp(item.install.asset, "i") : null;
   const bad = /diagnostic|debug|symbols|\.sha256$|sha256sums|readme|license|\.txt$|\.md$/i;
-  let a = re ? assets.find(x => re.test(x.name)) : null;
+  // 이름 규칙에 맞는 첨부가 여럿이면(전환 기간: 설치기 EXE + 데이터 zpkg) 첨부 순서와 상관없이 zpkg를 먼저 고름
+  const hits = re ? assets.filter(x => re.test(x.name)) : [];
+  let a = hits.find(x => /\.zpkg$/i.test(x.name)) || hits[0] || null;
   if (!a && !re && mode !== "engine") a = assets.find(x => /\.exe$/i.test(x.name) && !bad.test(x.name));
   if (!a && mode === "zip") a = assets.find(x => /\.zip$/i.test(x.name) && !bad.test(x.name));
   if (!a) return null;
