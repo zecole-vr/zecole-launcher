@@ -72,8 +72,8 @@ namespace Zecole.Launcher
 
         /// <summary>
         /// 시작 게임 찾기: --game=xxx 인자 > EXE 파일 이름.
-        /// 파일 이름은 "ZECOLE_Launcher.exe" 가 기본이고,
-        /// 게임별 배포 시 "ZECOLE_H3VR2_한글패치.exe" 처럼 이름만 바꾸면 해당 게임 화면으로 열림.
+        /// 파일 이름은 "ZECOLE_Launcher.exe" 가 기본. 예전 게임별 이름("ZECOLE_H3VR2_한글패치.exe")으로 열어도
+        /// 화면은 항상 홈에서 시작하고, 찾은 게임은 홈 상단 안내 카드와 왼쪽 목록 강조로만 알려 줌.
         /// </summary>
         private static string ReadStartHint(string[] args)
         {
