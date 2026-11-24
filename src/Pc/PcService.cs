@@ -205,7 +205,20 @@ namespace Zecole.Launcher.Pc
             }
             switch (engine)
             {
-                case "pc-aft-steam":   // 통합 설치기 EXE 안의 Steam 묶음만 (글꼴 등 라이선스 문서도 함께 보관)
+                case "pc-aft-steam":
+                    if (file.EndsWith(".zpkg", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // 데이터 전용 묶음(AFT_Steam_v*.zpkg): 루트에 launcher_config.json, patch/, licenses/
+                        using (var z = ZipFile.OpenRead(file))
+                            foreach (var e in z.Entries.Where(e => !e.FullName.EndsWith("/")))
+                            {
+                                var t = Safe(e.FullName); Directory.CreateDirectory(Path.GetDirectoryName(t)); e.ExtractToFile(t, true);
+                            }
+                        foreach (var need in new[] { "launcher_config.json", @"patch\manifest.json", @"patch\Fisherman-KoreanSubtitles_P.pak" })
+                            if (!File.Exists(Path.Combine(stage, need))) throw new PatchError("패치 데이터에 " + need + " 이(가) 없습니다.");
+                        break;
+                    }
+                    // 예전 통합 설치기 EXE 안의 Steam 묶음만 (글꼴 등 라이선스 문서도 함께 보관)
                     const string pre = "bundle/platforms/Steam/";
                     var got = PyInstallerArchive.ExtractWhere(file, n => n.StartsWith(pre) && !n.Contains("/ui/") ? Safe(n.Substring(pre.Length)) : null);
                     if (!got.Contains(pre + "patch/Fisherman-KoreanSubtitles_P.pak")) throw new PatchError("설치기 안에 Steam용 패치가 없습니다.");

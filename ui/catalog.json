@@ -146,7 +146,7 @@
       "id": "aft", "kind": "patch", "order": 50,
       "name": "A Fisherman's Tale", "sub": "어 피셔맨스 테일",
       "platforms": ["pcvr", "quest"], "store": "Steam · Meta Quest Store", "steamAppId": "559330",
-      "install": { "mode": "engine", "engine": "pc-aft-steam", "questFallback": true, "asset": "^A-Fishermans-Tale_.*_Setup_[\\d.]+\\.exe$" },
+      "install": { "mode": "engine", "engine": "pc-aft-steam", "questFallback": true, "asset": "^(A-Fishermans-Tale_.*_Setup_[\\d.]+\\.exe|AFT_Steam_v[\\d.]+\\.zpkg)$" },
       "stateDir": "A-Fishermans-Tale",
       "variantLabel": "Steam · PC VR",
       "variants": [{
