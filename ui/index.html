@@ -252,7 +252,6 @@ h1.h1-lead{font-size:24px;line-height:1.3;margin:4px 0 3px}
 .rvid .vthumb{width:112px;flex:none}
 .rvid b{font-size:12.5px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .rvid small{display:flex;align-items:center;gap:5px;color:var(--yt);font-weight:700;font-size:11px;margin-bottom:3px}
-.disc{margin-top:12px}
 .more{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .mcard{text-align:left;border-radius:12px;overflow:hidden;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);cursor:pointer}
 .mcard:hover{box-shadow:inset 0 0 0 1px var(--line-2)}
@@ -811,7 +810,7 @@ function renderDetail(g) {
       `<button class="${v.id === g.id ? "on" : ""}" onclick="pickVariant('${parent.id}','${v.id}')" ${S.busy || S.qbusy ? "disabled" : ""}>${esc(v.variantLabel || platLabel(v))}</button>`).join("")}</div>` : "";
 
   const rv = relatedVideo(g);
-  const disc = (C.promos || []).find(p => p.id === "game-discount");
+  // 제휴 할인·후원은 오른쪽 칸에 항상 떠 있으므로 게임 화면에서는 반복해 넣지 않음
   const others = ITEMS.filter(x => x.id !== g.id && isPatch(x) && !["ok", "ran"].includes(stat(x).key)).slice(0, 4);
 
   return `<div class="${S._enter ? "enter" : ""}">
@@ -845,11 +844,9 @@ function renderDetail(g) {
           <div class="panel-h"><h2>알아둘 점</h2></div>
           <ul class="tips">${(g.tips || ["설치 전 게임을 완전히 종료해 주세요."]).map(t => `<li>${ICON.info}<span>${t}</span></li>`).join("")}</ul>
           ${rv ? `<button class="rvid" onclick="openUrl('https://youtu.be/${esc(rv.id)}')"><div class="vthumb" style="background-image:url('https://i.ytimg.com/vi/${esc(rv.id)}/mqdefault.jpg')"></div><span><small>${ICON.yt.replace(/16/g, "12")}관련 영상</small><b>${esc(rv.title.split("|")[0])}</b></span></button>` : ""}
-          ${isQuest(g) && disc ? `<button class="rvid disc" style="--pc:${disc.accent}" onclick="openUrl('${esc(g.questStoreUrl || disc.url)}')"><span class="promo-ic" style="background:var(--accent-soft);color:var(--accent)">${ICON.tag}</span><span><small style="color:var(--accent)">${esc(disc.tag)}</small><b>${esc(disc.title)}</b></span></button>` : ""}
           <div class="res">
             <button onclick="openUrl('${esc(g.repoUrl)}')"><span style="display:flex;align-items:center;gap:8px">${ICON.gh}${esc(g.repo)}</span>${ICON.ext}</button>
             <button onclick="openUrl('${esc(g.repoUrl)}/issues')">오역 제보 · 수정 요청 ${ICON.ext}</button>
-            <button onclick="showDonate()">도움이 됐다면 후원하기 <span>→</span></button>
           </div>
         </div>
       </div>
