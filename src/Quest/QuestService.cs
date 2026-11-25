@@ -87,7 +87,7 @@ namespace Zecole.Launcher.Quest
             {
                 bool unauth = entries.Any(x => x.Length > 1 && x[1] == "unauthorized");
                 var s = unauth ? St("USB 디버깅을 허용해 주세요", "헤드셋 안의 USB 디버깅 허용 창을 확인해 주세요.", "인증 필요", "neutral")
-                               : St("Quest를 연결해 주세요", saved.Count > 0 ? "USB로 연결하거나 무선 연결을 다시 시도해 주세요." : "USB로 연결한 뒤 다시 확인을 눌러 주세요.", "연결 필요", "neutral");
+                               : St("Quest를 연결해 주세요", saved.Count > 0 ? "USB로 연결하거나 무선 연결을 다시 시도해 주세요." : "USB로 연결하거나, 무선 디버깅 중이면 ‘무선 Quest 찾기’를 눌러 주세요.", "연결 필요", "neutral");
                 s["message"] = saved.Count > 0 && !unauth && QuestWireless.Paused
                     ? "무선 연결을 끊었습니다. 다시 연결하려면 ‘무선 다시 연결’을 누르거나 USB로 연결해 주세요."
                     : saved.Count > 0 && !unauth
@@ -313,7 +313,7 @@ namespace Zecole.Launcher.Quest
         {
             string S(string k) => a.TryGetValue(k, out var v) ? v as string : null;
             var action = S("action");
-            if (!new[] { "enable", "connect", "disconnect", "forget" }.Contains(action)) throw new ArgumentException("action");
+            if (!new[] { "enable", "connect", "discover", "disconnect", "forget" }.Contains(action)) throw new ArgumentException("action");
             return Task.Run(() =>
             {
                 lock (_selected) { if (_busy) throw new PatchError("다른 작업이 진행 중입니다."); _busy = true; }
@@ -324,6 +324,7 @@ namespace Zecole.Launcher.Quest
                     {
                         case "enable": return (object)QuestWireless.Enable(exe, S("serial"));
                         case "connect": return QuestWireless.Connect(exe, S("address"));
+                        case "discover": return QuestWireless.Discover(exe);
                         case "disconnect": return QuestWireless.Disconnect(exe, S("address"), false);
                         default: return QuestWireless.Disconnect(exe, S("address"), true);
                     }

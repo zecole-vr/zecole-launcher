@@ -133,12 +133,102 @@ namespace Zecole.Launcher.Quest
             string o;
             try { o = new Adb(exe).Run(new[] { "mdns", "services" }, 10, false).output; } catch { return false; }
             bool any = false;
-            foreach (Match m in Regex.Matches(o, @"_adb-tls-connect\._tcp\.?\s+(\d{1,3}(?:\.\d{1,3}){3}:\d{1,5})"))
+            foreach (var addr in MdnsAddresses(o))
             {
-                var addr = m.Groups[1].Value;
-                if (ValidAddress(addr) && TryConnect(exe, addr, 8)) { Log.Info("[무선] 페어링된 Quest를 찾아 연결했습니다: " + addr); any = true; }
+                if (TryConnect(exe, addr, 8)) { Log.Info("[무선] 페어링된 Quest를 찾아 연결했습니다: " + addr); any = true; }
             }
             return any;
+        }
+
+        /// <summary>adb mdns services 출력에서 무선 디버깅 주소(IP:포트)만 뽑음</summary>
+        private static List<string> MdnsAddresses(string output) =>
+            Regex.Matches(output ?? "", @"_adb(?:-tls-connect)?\._tcp\.?\s+(\d{1,3}(?:\.\d{1,3}){3}:\d{1,5})")
+                .Cast<Match>().Select(m => m.Groups[1].Value).Where(ValidAddress).Distinct().ToList();
+
+        /// <summary>
+        /// 같은 Wi-Fi 의 Quest 를 mDNS 로 찾음.
+        /// 지금 켜져 있는 ADB 서버에 mDNS 가 없으면(다른 프로그램이 mDNS 없이 켠 경우) 그 서버는 건드리지 않고
+        /// 다른 포트에 임시 서버를 잠깐 켜서 찾은 뒤 바로 끔. 연결은 원래 서버로 함.
+        /// </summary>
+        private static List<string> MdnsScan(string exe)
+        {
+            string check = "";
+            try { check = new Adb(exe).Run(new[] { "mdns", "check" }, 10, false).output; } catch { }
+            if (Regex.IsMatch(check, @"mdns daemon version", RegexOptions.IgnoreCase))
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    List<string> found;
+                    try { found = MdnsAddresses(new Adb(exe).Run(new[] { "mdns", "services" }, 10, false).output); } catch { found = new List<string>(); }
+                    if (found.Count > 0) return found;
+                    Thread.Sleep(1500);
+                }
+                return new List<string>();
+            }
+            Log.Info("[무선] 실행 중인 ADB 서버에 mDNS가 없어 임시 서버로 찾습니다.");
+            int port;
+            var l = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+            l.Start(); port = ((System.Net.IPEndPoint)l.LocalEndpoint).Port; l.Stop();
+            var tmp = new Adb(exe) { Env = new Dictionary<string, string> { ["ANDROID_ADB_SERVER_PORT"] = port.ToString() } };
+            try
+            {
+                tmp.Run(new[] { "start-server" }, 20, false);
+                // 서버를 막 켜면 응답이 모일 때까지 몇 초 걸림
+                for (int i = 0; i < 8; i++)
+                {
+                    Thread.Sleep(1000);
+                    var found = MdnsAddresses(tmp.Run(new[] { "mdns", "services" }, 10, false).output);
+                    if (found.Count > 0) return found;
+                }
+                return new List<string>();
+            }
+            catch { return new List<string>(); }
+            finally { try { tmp.Run(new[] { "kill-server" }, 10, false); } catch { } }
+        }
+
+        /// <summary>
+        /// 화면의 '무선 Quest 찾기' 버튼.
+        /// 1) 기억한 주소  2) mDNS 로 같은 Wi-Fi 에서 무선 디버깅 중인 Quest  3) 기억한 IP 의 바뀐 포트 순서로 찾아 연결
+        /// </summary>
+        public static Dictionary<string, object> Discover(string exe)
+        {
+            _paused = false;
+            var saved = Saved();
+            foreach (var h in saved.Take(2))
+                if (h.DeviceId != null && TryConnect(exe, h.Address, 6) && VerifyOrDrop(exe, h.Address, h.DeviceId))
+                    return Found(h.Address, "기억한 주소");
+
+            var addrs = MdnsScan(exe);
+            Log.Info("[무선] mDNS로 찾은 주소: " + (addrs.Count > 0 ? string.Join(", ", addrs) : "없음"));
+            string first = null, failed = null;
+            foreach (var addr in addrs)
+            {
+                if (TryConnect(exe, addr, 10))
+                {
+                    var a = new Adb(exe, addr);
+                    string id = "", model = "";
+                    try { id = a.Shell(15, false, "getprop", "ro.serialno").output.Trim(); model = a.Shell(15, false, "getprop", "ro.product.model").output.Trim(); } catch { }
+                    Remember(id.Length > 0 ? id : null, addr, model);
+                    first = first ?? addr;
+                }
+                else failed = failed ?? addr;
+            }
+            if (first != null) return Found(first, "같은 Wi-Fi");
+
+            foreach (var h in saved.Where(x => x.DeviceId != null).Take(2))
+            {
+                var addr = FindNewPort(exe, h, true);
+                if (addr != null) return Found(addr, "바뀐 포트");
+            }
+            if (failed != null)
+                throw new PatchError($"같은 Wi-Fi에서 Quest({failed.Split(':')[0]})를 찾았지만 연결하지 못했습니다. 헤드셋을 쓰고 USB 디버깅 허용 창이 떴다면 허용을 누른 뒤 다시 찾아 주세요. 계속 안 되면 USB로 한 번 연결해 ‘무선으로 연결하기’를 눌러 주세요.");
+            throw new PatchError("같은 Wi-Fi에서 Quest를 찾지 못했습니다. Quest가 켜져 있는지(절전 상태가 아닌지), PC와 같은 공유기에 연결되어 있는지 확인해 주세요. Quest를 재부팅했다면 USB로 한 번 연결해 ‘무선으로 연결하기’를 눌러 주세요.");
+
+            Dictionary<string, object> Found(string addr, string how)
+            {
+                Log.Info($"[무선] Quest를 찾아 연결했습니다({how}): {addr}");
+                return new Dictionary<string, object> { ["ok"] = true, ["address"] = addr, ["message"] = $"Quest를 찾아 무선으로 연결했습니다 ({addr.Split(':')[0]})" };
+            }
         }
 
         /// <summary>연결된 기기가 기억한 기기 번호와 같은지. 다르면 연결을 끊음 (공유기가 주소를 다른 기기에 준 경우)</summary>

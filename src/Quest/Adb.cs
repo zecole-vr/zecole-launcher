@@ -40,6 +40,9 @@ namespace Zecole.Launcher.Quest
 
         public Adb(string exe, string serial = null) { Exe = exe; Serial = serial; }
 
+        /// <summary>추가 환경 변수 (예: 임시 ADB 서버 포트)</summary>
+        public Dictionary<string, string> Env;
+
         public (string output, int code) Run(string[] args, int timeoutSec = 180, bool check = true, CancellationToken ct = default) => Run(args, null, timeoutSec, check, ct);
 
         /// <summary>input 이 있으면 표준 입력으로 넘김 (비밀 값을 명령줄에 남기지 않기 위해)</summary>
@@ -52,6 +55,9 @@ namespace Zecole.Launcher.Quest
                 RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = input != null,
                 StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8,
             };
+            // 런처가 ADB 서버를 처음 켤 때 mDNS(무선 Quest 찾기)가 켜지도록 함. 이 값이 없으면 Windows 의 adb 34 는 "mdns daemon unavailable"
+            psi.EnvironmentVariables["ADB_MDNS_OPENSCREEN"] = "1";
+            if (Env != null) foreach (var kv in Env) psi.EnvironmentVariables[kv.Key] = kv.Value;
             using (var p = Process.Start(psi))
             {
                 if (input != null)

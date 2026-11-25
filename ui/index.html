@@ -991,7 +991,7 @@ async function questWifi(id, action, address) {
   if (S.qbusy || S.qwifi) return;
   clearTimeout(_qPoll);
   S.qseq = S.qseq || {}; S.qseq[id] = (S.qseq[id] || 0) + 1;
-  S.qwifi = { id, action }; S.qprog[id] = { message: { enable: "무선 연결을 켜는 중… (10초 정도 걸려요)", connect: "무선으로 연결하는 중…", disconnect: "무선 연결을 끊는 중…", forget: "무선 연결을 지우는 중…" }[action] }; render();
+  S.qwifi = { id, action }; S.qprog[id] = { message: { enable: "무선 연결을 켜는 중… (10초 정도 걸려요)", connect: "무선으로 연결하는 중…", discover: "같은 Wi-Fi에서 Quest를 찾는 중… (10~20초 걸려요)", disconnect: "무선 연결을 끊는 중…", forget: "무선 연결을 지우는 중…" }[action] }; render();
   let ok = false;
   try {
     const r = await host("quest.wifi", { action, serial: q.serial, address: address || (action === "disconnect" || action === "forget" ? (q.wireless ? q.serial : q.wifiSaved) : null) });
@@ -1017,7 +1017,8 @@ function showWifiHelp(id) {
     <p style="font-size:12.5px;color:var(--muted)">Quest를 재부팅했다면 무선 모드가 꺼지므로 USB로 한 번 다시 켜 주세요. 이미 무선 모드를 켜 두었다면(예: SideQuest) 아래에 Quest의 IP 주소를 입력해 바로 연결할 수 있어요.</p>
     <div style="display:flex;gap:8px;margin-top:8px"><input id="wifiAddr" class="num" placeholder="예) 192.168.0.23" value="${esc((q.wifiSaved || "").split(":")[0])}" style="flex:1;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text)">
     <button class="mini acc" style="height:36px;padding:0 16px" onclick="const v=document.getElementById('wifiAddr').value;hideModal();questWifi('${id}','connect',v)">연결</button></div>
-    <div class="mfoot">${q.wifiSaved ? `<button class="ghost-btn" onclick="hideModal();questWifi('${id}','forget')">기억한 주소 지우기</button>` : ""}<button class="ghost-btn" onclick="hideModal()">닫기</button></div>`);
+    <p style="font-size:12.5px;color:var(--muted);margin-top:10px">IP 주소를 모르면 <b>무선 Quest 찾기</b>로 같은 Wi-Fi에서 무선 디버깅 중인 Quest를 자동으로 찾을 수 있어요.</p>
+    <div class="mfoot">${q.wifiSaved ? `<button class="ghost-btn" onclick="hideModal();questWifi('${id}','forget')">기억한 주소 지우기</button>` : ""}<button class="ghost-btn" onclick="hideModal();questWifi('${id}','discover')">무선 Quest 찾기</button><button class="ghost-btn" onclick="hideModal()">닫기</button></div>`);
 }
 
 function questOpenStorage(id) { const g = byId(id); if (g?.install?.storage) host("quest.openStorage", { storage: g.install.storage }); }
@@ -1055,7 +1056,7 @@ function questView(g) {
     const pct = prog?.percent;
     cls = "busy";
     label = `<div class="bar" style="width:${pct != null ? Math.max(3, pct) : 100}%;${pct == null ? "opacity:.45" : ""}"></div><span class="num">${{ install: "설치 진행 중", restore: "복구 진행 중", cleanup: "정리 중" }[S.qbusy.action]}${pct != null ? " · " + Math.floor(pct) + "%" : ""}</span>`;
-  } else if (S.qwifi && S.qwifi.id === g.id) { cls = "busy"; label = `<span class="num">${S.qwifi.action === "enable" || S.qwifi.action === "connect" ? "무선 연결 중…" : "처리 중…"}</span>`; }
+  } else if (S.qwifi && S.qwifi.id === g.id) { cls = "busy"; label = `<span class="num">${S.qwifi.action === "enable" || S.qwifi.action === "connect" ? "무선 연결 중…" : S.qwifi.action === "discover" ? "Quest 찾는 중…" : "처리 중…"}</span>`; }
   else if (q.checking) { cls = "busy"; label = `<span class="num">Quest 확인 중…</span>`; }
   else label = `${q.tag === "최신 버전" ? ICON.check : ICON.down}<span>${esc(q.installLabel || "Quest 연결 확인")}${q.tag !== "최신 버전" && g.latest && q.canInstall ? ` <small class="num">v${esc(g.latest)}</small>` : ""}</span>`;
   if (!mine && !q.checking && q.tag === "최신 버전") cls = "soft";
@@ -1071,8 +1072,7 @@ function questView(g) {
   const wifiOff = !!(S.qbusy || S.busy || S.qwifi || q.checking);
   const wifiLink = q.serial && !q.wireless ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${wifiOff ? "disabled" : ""} onclick="questWifi('${g.id}','enable')">무선으로 연결하기 →</button>`
     : q.serial && q.wireless ? `<button class="link" style="margin-top:6px;color:var(--muted)" ${wifiOff ? "disabled" : ""} onclick="questWifi('${g.id}','disconnect')">무선 연결 끊기</button>`
-    : !q.checking && ["연결 필요"].includes(q.tag) ? (q.wifiSaved ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${wifiOff ? "disabled" : ""} onclick="questWifi('${g.id}','connect')">무선 다시 연결 →</button> <button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">주소 입력</button>`
-      : `<button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">무선으로 연결하는 방법 →</button>`) : "";
+    : !q.checking && ["연결 필요"].includes(q.tag) ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${wifiOff ? "disabled" : ""} onclick="questWifi('${g.id}','discover')">무선 Quest 찾기 →</button> <button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">${q.wifiSaved ? "주소 입력" : "무선으로 연결하는 방법"}</button>` : "";
   const third = `<div class="fact-l">Quest 기기 <span class="pill ${q.serial ? "ok" : "off"}">${q.serial ? (q.wireless ? "무선 연결됨" : "연결됨") : esc(q.tag || "확인 중")}</span></div>
     <div class="fact-v" style="font-size:16px">${esc(q.model || (q.serial ? "Quest" : q.current || "연결 대기"))}</div>
     <div class="fact-s">${q.serial ? "기기 " + esc(devName.slice(-6)) + (q.wireless ? " · Wi-Fi " + esc(q.serial.split(":")[0]) : "") + (q.pcOriginal ? " · 원본은 이 PC에 보관" : "") : esc(q.note || "개발자 모드 · USB 디버깅 허용 필요")}</div>${devSel}${wifiLink}
@@ -1164,8 +1164,7 @@ function fovView(g) {
   const off = !!(S.qbusy || S.busy || S.qwifi || q.checking);
   const wifiLink = q.serial && !q.wireless ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${off ? "disabled" : ""} onclick="questWifi('${g.id}','enable')">무선으로 연결하기 →</button>`
     : q.serial && q.wireless ? `<button class="link" style="margin-top:6px;color:var(--muted)" ${off ? "disabled" : ""} onclick="questWifi('${g.id}','disconnect')">무선 연결 끊기</button>`
-    : !q.checking && q.tag === "연결 필요" ? (q.wifiSaved ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${off ? "disabled" : ""} onclick="questWifi('${g.id}','connect')">무선 다시 연결 →</button> <button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">주소 입력</button>`
-      : `<button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">무선으로 연결하는 방법 →</button>`) : "";
+    : !q.checking && q.tag === "연결 필요" ? `<button class="link" style="margin-top:6px;color:var(--accent)" ${off ? "disabled" : ""} onclick="questWifi('${g.id}','discover')">무선 Quest 찾기 →</button> <button class="link" style="margin-top:6px;color:var(--muted)" onclick="showWifiHelp('${g.id}')">${q.wifiSaved ? "주소 입력" : "무선으로 연결하는 방법"}</button>` : "";
   const third = `<div class="fact-l">Quest 기기 <span class="pill ${q.serial ? "ok" : "off"}">${q.serial ? (q.wireless ? "무선 연결됨" : "연결됨") : esc(q.tag || "확인 중")}</span></div>
     <div class="fact-v" style="font-size:16px">${esc(q.model || (q.serial ? "Quest" : q.current || "연결 대기"))}</div>
     <div class="fact-s">${q.serial ? "기기 " + esc(devName.slice(-6)) + (q.wireless ? " · Wi-Fi " + esc(q.serial.split(":")[0]) : "") : esc(q.note || "개발자 모드 · USB 디버깅 허용 필요")}</div>${devSel}${wifiLink}`;
