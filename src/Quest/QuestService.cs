@@ -187,7 +187,8 @@ namespace Zecole.Launcher.Quest
             st["message"] = run ? "게임을 완전히 종료한 뒤 다시 확인해 주세요."
                 : !originalReachable ? "이 PC에 원본 백업이 없어요. 원래 게임으로 되돌리려면 Meta 앱에서 게임을 삭제한 뒤 다시 설치해 주세요."
                 : connMsg;
-            try
+            // 정리는 PC 원본을 확인해야만 진행되므로, 원본을 구할 수 없으면 정리할 크기를 알리지 않음 (눌러도 항상 거부되는 버튼 방지)
+            if (originalReachable) try
             {
                 var (dev, pc, mobile) = engine.Reclaimable(original);
                 st["reclaimDevice"] = dev; st["reclaimPc"] = pc; st["keptForMobile"] = mobile;
