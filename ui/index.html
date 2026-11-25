@@ -37,6 +37,7 @@ body.preview .app{width:min(1460px,100vw);height:min(820px,100vh);border-radius:
 .mark{width:22px;height:22px;border-radius:6px;background:url(icon.png) center/cover}
 .brand b{font-weight:800;letter-spacing:.14em;font-size:12px}
 .brand span{color:var(--muted);font-size:12px}
+.brand .ver{color:var(--faint);font-size:11px;margin-left:-4px}
 .tb-sp{flex:1;align-self:stretch}
 .tb-meta{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px;white-space:nowrap}
 .tb-pill{display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(230,169,110,.3)}
@@ -285,7 +286,7 @@ h1.h1-lead{font-size:24px;line-height:1.3;margin:4px 0 3px}
 <body>
 <div class="app">
   <header class="titlebar" id="titlebar">
-    <div class="brand"><div class="mark"></div><b>ZECOLE</b><span>VR 런처</span></div>
+    <div class="brand"><div class="mark"></div><b>ZECOLE</b><span>VR 런처</span><span class="ver num" id="appVer"></span></div>
     <div class="tb-sp" data-drag></div>
     <div class="tb-meta num" id="syncMeta" data-drag></div>
     <div id="updPill"></div>
@@ -307,7 +308,7 @@ h1.h1-lead{font-size:24px;line-height:1.3;margin:4px 0 3px}
     <main class="main" id="main"></main>
     <aside class="rail">
       <div class="rail-scroll" id="rail"></div>
-      <div class="rail-foot"><button class="link" style="font-size:11px;color:var(--faint)" onclick="showNotices()">오픈소스 고지 · MIT 라이선스</button></div>
+      <div class="rail-foot"><button class="link" style="font-size:11px;color:var(--faint)" onclick="showNotices()"><span id="footVer"></span>오픈소스 고지 · MIT 라이선스</button></div>
     </aside>
   </div>
 </div>
@@ -587,6 +588,10 @@ function showModal(html, wide) { const m = $("#modal"); m.className = "modal" + 
 function hideModal() { $("#scrim").classList.remove("on"); }
 
 function renderTitle() {
+  // 지금 쓰는 런처 버전 (제목줄·왼쪽 아래)
+  const ver = S.info && S.info.version ? "v" + S.info.version : "";
+  setHtml($("#appVer"), esc(ver));
+  setHtml($("#footVer"), ver ? `런처 ${esc(ver)} · ` : "");
   const el = $("#syncMeta");
   setHtml(el, S.sync === "checking" ? `<span class="dot warn pulse"></span>GitHub 확인 중`
     : S.sync === "ok" ? `<span class="dot"></span>GitHub 최신 정보`
