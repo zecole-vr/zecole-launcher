@@ -77,6 +77,8 @@ namespace Zecole.Launcher
                 // ── 창 ──
                 case "win.drag": _form.BeginDrag(); return null;
                 case "win.minimize": _form.WindowState = System.Windows.Forms.FormWindowState.Minimized; return null;
+                case "win.resize": _form.BeginResize(S(a, "edge")); return null;
+                case "win.max": _form.ToggleMaximize(); return null;
                 case "win.close":
                     if (_installer.Busy || _quest.Busy || _pc.Busy) return false; // 설치 중에는 닫지 않음 (화면에서 안내)
                     _form.Close(); return true;

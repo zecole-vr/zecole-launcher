@@ -10,14 +10,19 @@ using Microsoft.Web.WebView2.WinForms;
 
 namespace Zecole.Launcher
 {
-    /// <summary>테두리 없는 1460×820 창(왼쪽 목록 · 본문 · 오른쪽 혜택 칸). 마지막으로 닫은 위치에 다시 열고, 기억한 위치가 없거나 그 모니터가 없어졌으면 주 모니터 가운데에 연다. 크기는 주 모니터 기준. 화면은 전부 WebView2(ui/index.html)가 그림.</summary>
+    /// <summary>테두리 없는 창(왼쪽 목록 · 본문 · 오른쪽 혜택 칸). 화면은 전부 WebView2(ui/index.html)가 그림.
+    /// 기본 배치는 1460×820(DPI 배율 적용)이고, 창을 키우면 배치는 그대로 두고 화면 전체를 같은 비율로 확대한다(4K 등 큰 화면 대응).
+    /// 가장자리를 끌어 크기를 바꾸고, 제목줄 더블클릭·최대화 버튼으로 최대화한다. 마지막 위치·크기·최대화 상태를 기억한다.</summary>
     internal sealed class MainForm : Form
     {
         public const int LogicalWidth = 1460, LogicalHeight = 820;
+        /// <summary>이보다 작게 줄이면 배치가 좁아지므로 막는다(DPI 배율 적용 전 값)</summary>
+        private const int MinLogicalWidth = 1200, MinLogicalHeight = 700;
         private const string Host = "app.zecole.local";
 
         private readonly WebView2 _web = new WebView2();
         private Bridge _bridge;
+        private readonly bool _startMaximized;
 
         public MainForm()
         {
@@ -25,11 +30,15 @@ namespace Zecole.Launcher
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
             BackColor = Color.FromArgb(14, 14, 17);
-            MaximizeBox = false;
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
 
-            ClientSize = FitSize(DeviceDpi / 96f);
-            Location = SavedLocation(Size) ?? CenterOnMain(Size);
+            float scale = DeviceDpi / 96f;
+            MinimumSize = MinSize(scale);
+            var saved = LoadWindow();
+            var size = saved?.Size ?? FitSize(scale);
+            Size = new Size(Math.Max(size.Width, MinimumSize.Width), Math.Max(size.Height, MinimumSize.Height));
+            Location = saved?.Location ?? CenterOnMain(Size);
+            _startMaximized = saved?.Max ?? false;
 
             _web.Dock = DockStyle.Fill;
             _web.DefaultBackgroundColor = BackColor;
@@ -43,6 +52,8 @@ namespace Zecole.Launcher
                 var cp = base.CreateParams;
                 cp.ClassStyle |= 0x20000;  // CS_DROPSHADOW: 테두리 없는 창에도 그림자
                 cp.Style |= 0x20000;       // WS_MINIMIZEBOX: 작업 표시줄 클릭으로 최소화/복원
+                cp.Style |= 0x10000;       // WS_MAXIMIZEBOX: 최대화·화면 위쪽에 끌어 붙이기
+                cp.Style |= 0x40000;       // WS_THICKFRAME: 크기 조절 허용 (테두리는 WM_NCCALCSIZE에서 없앰)
                 return cp;
             }
         }
@@ -53,10 +64,114 @@ namespace Zecole.Launcher
             Native.StyleWindow(Handle);
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            _normalBounds = Bounds;
+            if (_startMaximized) Native.SysCommand(Handle, true);
+        }
+
         protected override void OnDpiChanged(DpiChangedEventArgs e)
         {
             base.OnDpiChanged(e);
-            ClientSize = FitSize(e.DeviceDpiNew / 96f);
+            MinimumSize = MinSize(e.DeviceDpiNew / 96f);
+            // 다른 배율의 모니터로 옮기면 Windows가 제안한 크기(같은 비율)를 쓰되 그 모니터 안에 들어가게 함
+            if (WindowState == FormWindowState.Normal)
+            {
+                var r = e.SuggestedRectangle;
+                var wa = Screen.FromRectangle(r).WorkingArea;
+                Bounds = new Rectangle(r.X, r.Y, Math.Min(r.Width, wa.Width), Math.Min(r.Height, wa.Height));
+            }
+            ApplyZoom();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            TrackNormalBounds();
+            ApplyZoom();
+            if (_bridge != null && WindowState != FormWindowState.Minimized) _bridge.Emit("win", new { max = WindowState == FormWindowState.Maximized });
+        }
+
+        /// <summary>창이 기본 배치보다 크면 화면 전체를 같은 비율로 확대. 기본보다 작게는 줄이지 않음(작은 화면은 예전처럼 배치가 좁아짐).</summary>
+        private void ApplyZoom()
+        {
+            if (WindowState == FormWindowState.Minimized || ClientSize.Width <= 0 || ClientSize.Height <= 0) return;
+            float scale = DeviceDpi / 96f;
+            double z = Math.Min(ClientSize.Width / scale / LogicalWidth, ClientSize.Height / scale / LogicalHeight);
+            z = Math.Round(Math.Max(1.0, Math.Min(z, 4.0)), 3);
+            try { if (Math.Abs(_web.ZoomFactor - z) > 0.002) _web.ZoomFactor = z; }
+            catch (Exception ex) { Log.Info("화면 확대 실패: " + ex.Message); }
+        }
+
+        public void ToggleMaximize() => Native.SysCommand(Handle, WindowState != FormWindowState.Maximized);
+
+        /// <summary>마지막 보통 상태 위치·크기 (최대화·최소화 중에 닫아도 이 값을 기억)</summary>
+        private Rectangle _normalBounds;
+        /// <summary>최대화(또는 최소화)에서 보통 상태로 돌아오는 중</summary>
+        private bool _leavingMax, _clearPending;
+
+        /// <summary>보통 상태의 위치·크기를 기록. 최대화된 동안은 기록하지 않고, 복원 직후의 크기 변경이 끝나면(BeginInvoke) 다시 기록한다.</summary>
+        private void TrackNormalBounds()
+        {
+            if (!IsHandleCreated) return;
+            if (WindowState != FormWindowState.Normal) { _leavingMax = true; return; }
+            if (_leavingMax)
+            {
+                if (!_clearPending)
+                {
+                    _clearPending = true;
+                    BeginInvoke(new Action(() => { _leavingMax = false; _clearPending = false; if (WindowState == FormWindowState.Normal) _normalBounds = Bounds; }));
+                }
+                return;
+            }
+            _normalBounds = Bounds;
+        }
+
+        /// <summary>복원할 때 WinForms(Form.RestoreWindowBoundsIfNecessary)가 자기가 기억한 크기에 테두리 두께를 더해 다시 SetBounds 함
+        /// (WS_THICKFRAME + 테두리 없앰 조합). 그대로 두면 최대화·복원할 때마다 창이 14px씩 커지므로 그 순간에는 기억한 보통 크기를 씀.</summary>
+        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+        {
+            if (_leavingMax && WindowState == FormWindowState.Normal && !_normalBounds.IsEmpty && (specified & BoundsSpecified.Size) != 0)
+            {
+                width = _normalBounds.Width;
+                height = _normalBounds.Height;
+            }
+            base.SetBoundsCore(x, y, width, height, specified);
+        }
+
+        protected override void OnMove(EventArgs e)
+        {
+            base.OnMove(e);
+            TrackNormalBounds();
+        }
+
+        public void BeginResize(string edge)
+        {
+            if (WindowState != FormWindowState.Normal) return;
+            Native.BeginResize(Handle, edge);
+        }
+
+        /// <summary>테두리를 없앴으므로 창 크기 = 화면 크기. WinForms가 WS_THICKFRAME 테두리 두께를 더하지 않게 함
+        /// (더하면 최대화에서 복원할 때마다 창이 테두리만큼 커짐).</summary>
+        protected override Size SizeFromClientSize(Size clientSize) => clientSize;
+
+        private const int WM_NCCALCSIZE = 0x0083;
+
+        /// <summary>WS_THICKFRAME의 테두리를 없애 창 전체를 화면으로 씀. 최대화되면 창이 테두리만큼 모니터 밖으로 넘치므로 작업 영역에 맞춤.</summary>
+        private static bool HandleNcCalcSize(ref Message m)
+        {
+            if (m.Msg != WM_NCCALCSIZE || m.WParam == IntPtr.Zero) return false;
+            if (Native.IsZoomed(m.HWnd))
+            {
+                var r = Marshal.PtrToStructure<Native.RECT>(m.LParam);
+                var wa = Screen.FromPoint(new Point((r.Left + r.Right) / 2, (r.Top + r.Bottom) / 2)).WorkingArea;
+                // 복원 도중에도 IsZoomed가 잠깐 참이므로, 제안된 창이 작업 영역을 실제로 덮을 때(진짜 최대화)만 맞춤
+                if (r.Right - r.Left >= wa.Width && r.Bottom - r.Top >= wa.Height)
+                    Marshal.StructureToPtr(new Native.RECT { Left = wa.Left, Top = wa.Top, Right = wa.Right, Bottom = wa.Bottom }, m.LParam, false);
+            }
+            m.Result = IntPtr.Zero;
+            return true;
         }
 
         private static readonly string WindowFile = Path.Combine(Program.DataDir, "window-position.txt");
@@ -67,27 +182,37 @@ namespace Zecole.Launcher
             return new Point(wa.X + Math.Max(0, (wa.Width - size.Width) / 2), wa.Y + Math.Max(0, (wa.Height - size.Height) / 2));
         }
 
-        /// <summary>지난번에 닫은 위치. 창 윗부분(끌어서 옮기는 곳)이 지금 연결된 어느 모니터에든 충분히 보일 때만 쓴다.
-        /// 모니터를 빼거나 배치를 바꿔 화면 밖이 되면 null을 돌려 주 모니터 가운데에 연다.</summary>
-        private static Point? SavedLocation(Size size)
+        private sealed class SavedWindow { public Point? Location; public Size? Size; public bool Max; }
+
+        /// <summary>지난번에 닫은 위치·크기·최대화 상태. 파일 형식은 "x,y"(예전) 또는 "x,y,너비,높이,최대화(0/1)".
+        /// 위치는 창 윗부분(끌어서 옮기는 곳)이 지금 연결된 어느 모니터에든 충분히 보일 때만 쓰고, 크기는 그 모니터 작업 영역 안으로 줄인다.
+        /// 모니터를 빼거나 배치를 바꿔 화면 밖이 되면 위치·크기를 버리고 주 모니터 가운데에 새 크기로 연다.</summary>
+        private static SavedWindow LoadWindow()
         {
             try
             {
                 if (!File.Exists(WindowFile)) return null;
                 var v = File.ReadAllText(WindowFile).Trim().Split(',');
-                if (v.Length != 2 || !int.TryParse(v[0], out var x) || !int.TryParse(v[1], out var y)) return null;
-                var top = new Rectangle(x, y, size.Width, 48);
+                if (v.Length < 2 || !int.TryParse(v[0], out var x) || !int.TryParse(v[1], out var y)) return null;
+                Size? size = null;
+                if (v.Length >= 4 && int.TryParse(v[2], out var w) && int.TryParse(v[3], out var h) && w > 0 && h > 0) size = new Size(w, h);
+                var res = new SavedWindow { Max = v.Length >= 5 && v[4] == "1" };
+                var top = new Rectangle(x, y, size?.Width ?? LogicalWidth, 48);
                 foreach (var sc in Screen.AllScreens)
                 {
                     var hit = Rectangle.Intersect(sc.WorkingArea, top);
-                    if (hit.Width >= 160 && hit.Height >= 24) return new Point(x, y);
+                    if (hit.Width < 160 || hit.Height < 24) continue;
+                    res.Location = new Point(x, y);
+                    if (size != null) res.Size = new Size(Math.Min(size.Value.Width, sc.WorkingArea.Width), Math.Min(size.Value.Height, sc.WorkingArea.Height));
+                    break;
                 }
+                return res;
             }
             catch (Exception ex) { Log.Info("창 위치 불러오기 실패: " + ex.Message); }
             return null;
         }
 
-        /// <summary>창을 닫을 때 위치를 기억한다(최소화 상태면 최소화 전 위치).</summary>
+        /// <summary>창을 닫을 때 위치·크기·최대화 상태를 기억한다(최대화·최소화 상태면 그 전의 보통 크기).</summary>
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
@@ -95,9 +220,9 @@ namespace Zecole.Launcher
             _bridge?.MarkClosing();
             try
             {
-                var at = WindowState == FormWindowState.Normal ? Location : RestoreBounds.Location;
+                var b = WindowState == FormWindowState.Normal ? Bounds : _normalBounds;
                 Directory.CreateDirectory(Program.DataDir);
-                File.WriteAllText(WindowFile, at.X + "," + at.Y);
+                File.WriteAllText(WindowFile, $"{b.X},{b.Y},{b.Width},{b.Height},{(WindowState == FormWindowState.Maximized ? 1 : 0)}");
             }
             catch (Exception ex) { Log.Info("창 위치 저장 실패: " + ex.Message); }
         }
@@ -109,12 +234,25 @@ namespace Zecole.Launcher
             catch { return new Rectangle(0, 0, 1920, 1040); }
         }
 
-        /// <summary>기본 크기 × DPI 배율. 주 모니터 작업 영역보다 크면 그 안에 들어가게 줄인다.
-        /// 어느 모니터로 옮겨도 같은 크기를 유지하도록 항상 주 모니터만 기준으로 삼는다.</summary>
+        private static Size MinSize(float scale)
+        {
+            var wa = MainArea();
+            return new Size(Math.Max(640, Math.Min((int)(MinLogicalWidth * scale), wa.Width - 24)),
+                            Math.Max(480, Math.Min((int)(MinLogicalHeight * scale), wa.Height - 24)));
+        }
+
+        /// <summary>처음 크기(기억한 크기가 없을 때). 기본 크기 × DPI 배율이 주 모니터에 비해 많이 작으면(4K를 배율 100%로 쓰는 경우 등)
+        /// 화면 너비의 70% 정도로 키워서 연다(화면은 ApplyZoom이 같은 비율로 확대). 주 모니터 작업 영역보다 크면 그 안에 들어가게 줄인다.</summary>
         private static Size FitSize(float scale)
         {
             int w = (int)(LogicalWidth * scale), h = (int)(LogicalHeight * scale);
             var wa = MainArea();
+            if (w < wa.Width * 0.55)
+            {
+                w = (int)(wa.Width * 0.7);
+                h = w * LogicalHeight / LogicalWidth;
+                if (h > wa.Height * 0.8) { h = (int)(wa.Height * 0.8); w = h * LogicalWidth / LogicalHeight; }
+            }
             w = Math.Min(w, wa.Width - 24);
             h = Math.Min(h, wa.Height - 24);
             return new Size(Math.Max(w, 640), Math.Max(h, 480));
@@ -142,6 +280,7 @@ namespace Zecole.Launcher
             var env = await CoreWebView2Environment.CreateAsync(null, Path.Combine(Program.DataDir, "webview"),
                 new CoreWebView2EnvironmentOptions { Language = "ko-KR" });
             await _web.EnsureCoreWebView2Async(env);
+            ApplyZoom();
 
             var core = _web.CoreWebView2;
             var s = core.Settings;
@@ -168,6 +307,8 @@ namespace Zecole.Launcher
 
             _bridge = new Bridge(this, core);
             core.WebMessageReceived += (o, a) => _bridge.Handle(a.WebMessageAsJson);
+            // 화면이 열리면 최대화 상태를 알려 버튼 모양을 맞춤 (최대화로 시작한 경우)
+            core.NavigationCompleted += (o, a) => { ApplyZoom(); _bridge.Emit("win", new { max = WindowState == FormWindowState.Maximized }); };
             // 빌드마다 주소를 바꿔 이전 화면이 캐시에서 뜨지 않게 함
             var stamp = File.GetLastWriteTimeUtc(Application.ExecutablePath).Ticks.ToString("x");
             core.Navigate($"https://{Host}/index.html?b={stamp}");
@@ -198,6 +339,7 @@ namespace Zecole.Launcher
         // ── 다른 인스턴스에서 넘어온 "이 게임 열어줘" 요청 ──
         protected override void WndProc(ref Message m)
         {
+            if (HandleNcCalcSize(ref m)) return;
             if (m.Msg == Native.WM_COPYDATA)
             {
                 var cds = Marshal.PtrToStructure<Native.COPYDATASTRUCT>(m.LParam);

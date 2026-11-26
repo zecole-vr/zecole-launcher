@@ -44,6 +44,13 @@ body.preview .app{width:min(1460px,100vw);height:min(820px,100vh);border-radius:
 .tb-pill:hover{background:rgba(230,169,110,.2)}
 .winbtns{display:flex;height:100%;margin-left:6px}
 .winbtns button{width:46px;height:100%;display:grid;place-items:center;color:var(--text-2)}
+/* 창 가장자리 끌어서 크기 조절 (최대화 중에는 숨김) */
+.rz{position:fixed;z-index:9999}
+.rz[data-e=t]{top:0;left:10px;right:10px;height:5px;cursor:ns-resize}.rz[data-e=b]{bottom:0;left:10px;right:10px;height:5px;cursor:ns-resize}
+.rz[data-e=l]{left:0;top:10px;bottom:10px;width:5px;cursor:ew-resize}.rz[data-e=r]{right:0;top:10px;bottom:10px;width:5px;cursor:ew-resize}
+.rz[data-e=tl]{top:0;left:0;width:10px;height:10px;cursor:nwse-resize}.rz[data-e=br]{bottom:0;right:0;width:10px;height:10px;cursor:nwse-resize}
+.rz[data-e=tr]{top:0;right:0;width:10px;height:10px;cursor:nesw-resize}.rz[data-e=bl]{bottom:0;left:0;width:10px;height:10px;cursor:nesw-resize}
+body.max .rz,body.preview .rz{display:none}
 .winbtns button:hover{background:var(--surface-2)} .winbtns button.x:hover{background:#c42b1c;color:#fff}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block;flex:none}
 .dot.warn{background:var(--accent)} .dot.off{background:var(--faint)} .dot.err{background:var(--err)} .dot.blue{background:var(--blue)}
@@ -292,6 +299,7 @@ h1.h1-lead{font-size:24px;line-height:1.3;margin:4px 0 3px}
     <div id="updPill"></div>
     <div class="winbtns">
       <button onclick="host('win.minimize')" aria-label="최소화"><svg width="10" height="10"><path d="M0 5h10" stroke="currentColor"/></svg></button>
+      <button id="maxBtn" onclick="host('win.max')" aria-label="최대화"><svg width="10" height="10"><rect x=".5" y=".5" width="9" height="9" fill="none" stroke="currentColor"/></svg></button>
       <button class="x" onclick="closeApp()" aria-label="닫기"><svg width="10" height="10"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor"/></svg></button>
     </div>
   </header>
@@ -1339,7 +1347,33 @@ async function applyUpdate() {
 }
 
 /* 제목 줄 끌어서 창 이동 */
-$("#titlebar").addEventListener("mousedown", e => { if (e.button === 0 && !e.target.closest("button")) host("win.drag"); });
+/* 제목 줄 끌어서 창 이동 · 더블클릭으로 최대화/복원 (끌기가 마우스를 잡아 dblclick이 안 오므로 직접 잰다) */
+let lastTitleDown = 0;
+$("#titlebar").addEventListener("mousedown", e => {
+  if (e.button !== 0 || e.target.closest("button")) return;
+  const now = Date.now();
+  if (now - lastTitleDown < 400) { lastTitleDown = 0; host("win.max"); return; }
+  lastTitleDown = now;
+  host("win.drag");
+});
+/* 창 가장자리 끌어서 크기 조절 */
+for (const e of ["t", "b", "l", "r", "tl", "tr", "bl", "br"]) {
+  const d = document.createElement("div");
+  d.className = "rz"; d.dataset.e = e;
+  d.addEventListener("mousedown", ev => { if (ev.button === 0) { ev.preventDefault(); ev.stopPropagation(); host("win.resize", { edge: e }); } });
+  document.body.appendChild(d);
+}
+/* 최대화 상태에 맞춰 버튼 모양·가장자리 표시 */
+on("win", d => {
+  document.body.classList.toggle("max", !!d.max);
+  const b = $("#maxBtn");
+  if (b) {
+    b.setAttribute("aria-label", d.max ? "이전 크기로" : "최대화");
+    b.innerHTML = d.max
+      ? '<svg width="10" height="10"><path d="M2.5 2.5V.5h7v7h-2" fill="none" stroke="currentColor"/><rect x=".5" y="2.5" width="7" height="7" fill="none" stroke="currentColor"/></svg>'
+      : '<svg width="10" height="10"><rect x=".5" y=".5" width="9" height="9" fill="none" stroke="currentColor"/></svg>';
+  }
+});
 addEventListener("keydown", e => { if (e.key === "Escape") { if ($("#scrim").classList.contains("on")) hideModal(); else if (S.view !== "home") go("home"); } });
 
 /* ══════════════════════════════════════════════════════════════

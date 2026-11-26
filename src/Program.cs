@@ -179,6 +179,27 @@ namespace Zecole.Launcher
             SendMessage(handle, WM_NCLBUTTONDOWN, (IntPtr)HTCAPTION, IntPtr.Zero);
         }
 
+        /// <summary>창 가장자리 끌어서 크기 바꾸기 시작. edge: l r t b tl tr bl br</summary>
+        public static void BeginResize(IntPtr handle, string edge)
+        {
+            int ht;
+            switch (edge)
+            {
+                case "l": ht = 10; break; case "r": ht = 11; break; case "t": ht = 12; break; case "tl": ht = 13; break;
+                case "tr": ht = 14; break; case "b": ht = 15; break; case "bl": ht = 16; break; case "br": ht = 17; break;
+                default: return;
+            }
+            ReleaseCapture();
+            SendMessage(handle, WM_NCLBUTTONDOWN, (IntPtr)ht, IntPtr.Zero);
+        }
+
+        [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
+        [DllImport("user32.dll")] public static extern bool IsZoomed(IntPtr h);
+
+        /// <summary>Windows 최대화·복원 명령 (제목줄 더블클릭·Win+방향키와 같은 경로를 타게 함)</summary>
+        public static void SysCommand(IntPtr handle, bool maximize) =>
+            SendMessage(handle, 0x0112 /* WM_SYSCOMMAND */, (IntPtr)(maximize ? 0xF030 /* SC_MAXIMIZE */ : 0xF120 /* SC_RESTORE */), IntPtr.Zero);
+
         /// <summary>Windows 11 둥근 모서리 + 어두운 테두리</summary>
         public static void StyleWindow(IntPtr handle)
         {
