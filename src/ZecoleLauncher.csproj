@@ -17,7 +17,7 @@
     <RootNamespace>Zecole.Launcher</RootNamespace>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.1.3</Version>
+    <Version>1.1.4</Version>
     <Product>ZECOLE VR 런처</Product>
     <Company>ZECOLE</Company>
     <Copyright>ZECOLE</Copyright>
