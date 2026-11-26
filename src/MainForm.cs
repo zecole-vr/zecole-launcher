@@ -32,12 +32,16 @@ namespace Zecole.Launcher
             BackColor = Color.FromArgb(14, 14, 17);
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
 
-            float scale = DeviceDpi / 96f;
-            MinimumSize = MinSize(scale);
+            // 창이 열릴 모니터(기억한 위치가 있으면 그 모니터, 없으면 주 모니터)의 배율·작업 영역으로 크기를 정함.
+            // 아직 창이 없어 DeviceDpi는 주 모니터 값이므로 그 모니터의 배율을 직접 읽는다(4K 200% 보조 모니터 등).
             var saved = LoadWindow();
-            var size = saved?.Size ?? FitSize(scale);
+            var screen = saved?.Location != null ? Screen.FromPoint(saved.Location.Value) : PrimaryScreen();
+            var wa = screen.WorkingArea;
+            float scale = Native.DpiAt(new Point(wa.X + wa.Width / 2, wa.Y + wa.Height / 2)) / 96f;
+            MinimumSize = MinSize(scale, wa);
+            var size = saved?.Size ?? FitSize(scale, wa);
             Size = new Size(Math.Max(size.Width, MinimumSize.Width), Math.Max(size.Height, MinimumSize.Height));
-            Location = saved?.Location ?? CenterOnMain(Size);
+            Location = saved?.Location ?? CenterIn(wa, Size);
             _startMaximized = saved?.Max ?? false;
 
             _web.Dock = DockStyle.Fill;
@@ -74,7 +78,7 @@ namespace Zecole.Launcher
         protected override void OnDpiChanged(DpiChangedEventArgs e)
         {
             base.OnDpiChanged(e);
-            MinimumSize = MinSize(e.DeviceDpiNew / 96f);
+            MinimumSize = MinSize(e.DeviceDpiNew / 96f, Screen.FromRectangle(e.SuggestedRectangle).WorkingArea);
             // 다른 배율의 모니터로 옮기면 Windows가 제안한 크기(같은 비율)를 쓰되 그 모니터 안에 들어가게 함
             if (WindowState == FormWindowState.Normal)
             {
@@ -97,7 +101,8 @@ namespace Zecole.Launcher
         private void ApplyZoom()
         {
             if (WindowState == FormWindowState.Minimized || ClientSize.Width <= 0 || ClientSize.Height <= 0) return;
-            float scale = DeviceDpi / 96f;
+            // 창이 처음부터 다른 배율 모니터에 만들어지면 DeviceDpi가 주 모니터 값으로 남으므로 창의 실제 배율을 읽음
+            float scale = (IsHandleCreated ? Native.WindowDpi(Handle) : DeviceDpi) / 96f;
             double z = Math.Min(ClientSize.Width / scale / LogicalWidth, ClientSize.Height / scale / LogicalHeight);
             z = Math.Round(Math.Max(1.0, Math.Min(z, 4.0)), 3);
             try { if (Math.Abs(_web.ZoomFactor - z) > 0.002) _web.ZoomFactor = z; }
@@ -176,9 +181,8 @@ namespace Zecole.Launcher
 
         private static readonly string WindowFile = Path.Combine(Program.DataDir, "window-position.txt");
 
-        private static Point CenterOnMain(Size size)
+        private static Point CenterIn(Rectangle wa, Size size)
         {
-            var wa = MainArea();
             return new Point(wa.X + Math.Max(0, (wa.Width - size.Width) / 2), wa.Y + Math.Max(0, (wa.Height - size.Height) / 2));
         }
 
@@ -227,26 +231,22 @@ namespace Zecole.Launcher
             catch (Exception ex) { Log.Info("창 위치 저장 실패: " + ex.Message); }
         }
 
-        /// <summary>주 모니터의 작업 영역(작업 표시줄 제외).</summary>
-        private static Rectangle MainArea()
+        private static Screen PrimaryScreen()
         {
-            try { return (Screen.PrimaryScreen ?? Screen.AllScreens[0]).WorkingArea; }
-            catch { return new Rectangle(0, 0, 1920, 1040); }
+            try { return Screen.PrimaryScreen ?? Screen.AllScreens[0]; }
+            catch { return Screen.AllScreens[0]; }
         }
 
-        private static Size MinSize(float scale)
-        {
-            var wa = MainArea();
-            return new Size(Math.Max(640, Math.Min((int)(MinLogicalWidth * scale), wa.Width - 24)),
-                            Math.Max(480, Math.Min((int)(MinLogicalHeight * scale), wa.Height - 24)));
-        }
+        /// <summary>최소 크기 (그 모니터 작업 영역보다 크지 않게)</summary>
+        private static Size MinSize(float scale, Rectangle wa) =>
+            new Size(Math.Max(640, Math.Min((int)(MinLogicalWidth * scale), wa.Width - 24)),
+                     Math.Max(480, Math.Min((int)(MinLogicalHeight * scale), wa.Height - 24)));
 
-        /// <summary>처음 크기(기억한 크기가 없을 때). 기본 크기 × DPI 배율이 주 모니터에 비해 많이 작으면(4K를 배율 100%로 쓰는 경우 등)
-        /// 화면 너비의 70% 정도로 키워서 연다(화면은 ApplyZoom이 같은 비율로 확대). 주 모니터 작업 영역보다 크면 그 안에 들어가게 줄인다.</summary>
-        private static Size FitSize(float scale)
+        /// <summary>처음 크기(기억한 크기가 없을 때). 기본 크기 × 배율이 그 모니터에 비해 많이 작으면(4K를 배율 100%로 쓰는 경우 등)
+        /// 화면 너비의 70% 정도로 키워서 연다(화면은 ApplyZoom이 같은 비율로 확대). 작업 영역보다 크면 그 안에 들어가게 줄인다.</summary>
+        private static Size FitSize(float scale, Rectangle wa)
         {
             int w = (int)(LogicalWidth * scale), h = (int)(LogicalHeight * scale);
-            var wa = MainArea();
             if (w < wa.Width * 0.55)
             {
                 w = (int)(wa.Width * 0.7);

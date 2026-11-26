@@ -195,6 +195,28 @@ namespace Zecole.Launcher
 
         [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
         [DllImport("user32.dll")] public static extern bool IsZoomed(IntPtr h);
+        [StructLayout(LayoutKind.Sequential)] private struct POINT { public int X, Y; }
+        [DllImport("user32.dll")] private static extern IntPtr MonitorFromPoint(POINT pt, int flags);
+        [DllImport("shcore.dll")] private static extern int GetDpiForMonitor(IntPtr mon, int type, out uint dpiX, out uint dpiY);
+
+        [DllImport("user32.dll")] private static extern uint GetDpiForWindow(IntPtr h);
+        /// <summary>창이 지금 있는 모니터의 배율(DPI). 읽지 못하면 96.</summary>
+        public static int WindowDpi(IntPtr h)
+        {
+            try { var d = GetDpiForWindow(h); return d > 0 ? (int)d : 96; } catch { return 96; }
+        }
+
+        /// <summary>그 지점이 있는 모니터의 배율(DPI). 읽지 못하면 96(100%).</summary>
+        public static int DpiAt(System.Drawing.Point p)
+        {
+            try
+            {
+                var mon = MonitorFromPoint(new POINT { X = p.X, Y = p.Y }, 2 /* MONITOR_DEFAULTTONEAREST */);
+                if (GetDpiForMonitor(mon, 0 /* MDT_EFFECTIVE_DPI */, out var x, out _) == 0 && x > 0) return (int)x;
+            }
+            catch { }
+            return 96;
+        }
 
         /// <summary>Windows 최대화·복원 명령 (제목줄 더블클릭·Win+방향키와 같은 경로를 타게 함)</summary>
         public static void SysCommand(IntPtr handle, bool maximize) =>
